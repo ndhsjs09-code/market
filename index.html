@@ -20,7 +20,6 @@
         .nav-item.active-nav { color: var(--main); }
         input, textarea, select { width: 100%; padding: 12px; margin: 8px 0; background: #111; color: #fff; border: 1px solid #222; border-radius: 8px; }
         .cat-card { background: var(--card); padding: 25px; border-radius: 15px; margin-bottom: 12px; text-align: center; border: 1px solid #222; font-size: 18px; font-weight: 800; color: var(--main); }
-        .total-box { background: #1a1a1a; padding: 15px; border-radius: 12px; margin-top: 15px; border: 1px solid var(--main); display: flex; justify-content: space-between; align-items: center; font-weight: 900; }
     </style>
 </head>
 <body>
@@ -30,9 +29,9 @@
     <div id="cat-menu">
         <div class="cat-card" onclick="showCat('3C/L')">3C/L</div>
         <div class="cat-card" onclick="showCat('4CC/LL')">4CC/LL</div>
+        <div class="cat-card" onclick="showCat('Double/Triple')">Double/Triple</div>
         <div class="cat-card" onclick="showCat('4C/L Same')">4C/L Same</div>
         <div class="cat-card" onclick="showCat('4C/L')">4C/L</div>
-        <div class="cat-card" onclick="showCat('Double/Triple')">Double/Triple</div>
         <div class="cat-card" onclick="showCat('Others')">Others</div>
     </div>
     <div id="items-view" style="display:none">
@@ -44,12 +43,8 @@
 <div id="cart-tab" class="tab">
     <div class="header-title">CART</div>
     <div id="cart-list"></div>
-    <div id="total-container" style="display:none">
-        <div class="total-box"><span>TOTAL:</span><span style="color:var(--main)">$<span id="total-price">0</span></span></div>
-    </div>
-    <div id="pay-area" style="display:none; margin-top: 20px;">
-        <select id="pay-sel" onchange="updatePayInfo()"></select>
-        <div id="pay-info" style="padding:15px; border-radius:10px; border:1px dashed var(--main); margin:15px 0; background: #0c0c0c; display: none;"></div>
+    <div id="pay-area" style="display:none">
+        <select id="pay-sel"></select>
         <input type="file" id="receipt" accept="image/*">
         <button class="btn" id="send-btn" onclick="sendOrder()">CONFIRM AND SEND</button>
     </div>
@@ -57,15 +52,9 @@
 
 <div id="admin-tab" class="tab">
     <div class="header-title">ADMIN</div>
-    <select id="admin-cat"><option value="Auto">Auto Detect</option><option value="3C/L">3C/L</option><option value="4CC/LL">4CC/LL</option><option value="4C/L Same">4C/L Same</option><option value="4C/L">4C/L</option><option value="Double/Triple">Double/Triple</option><option value="Others">Others</option></select>
     <textarea id="admin-in" placeholder="user:pass:price"></textarea>
     <button class="btn" onclick="addAccs()">ADD ACCOUNTS</button>
     <div id="admin-items-list" style="margin-top:20px"></div>
-    <div style="border-top:1px solid #222; margin-top:20px; padding-top:20px">
-        <input type="text" id="p-name" placeholder="Method Name"><input type="text" id="p-val" placeholder="Wallet Details">
-        <button class="btn" onclick="addP()">SAVE METHOD</button>
-    </div>
-    <div id="admin-pays"></div>
 </div>
 
 <nav class="nav">
@@ -96,7 +85,6 @@
             const d = await r.json();
             allI = d.items; allP = d.payments;
             document.getElementById('pay-sel').innerHTML = '<option disabled selected>CHOOSE PAYMENT</option>' + allP.map(p=>`<option value="${p.split('|')[0]}">${p.split('|')[0]}</option>`).join('');
-            document.getElementById('admin-pays').innerHTML = allP.map(p=>`<div class="card"><span>${p.split('|')[0]}</span><button class="btn-del" onclick="delP('${p}')">DEL</button></div>`).join('');
         } catch(e) {}
     }
 
@@ -117,31 +105,11 @@
 
     function renderCart() {
         const c = document.getElementById('cart-list');
-        if(cart.length==0) { 
-            c.innerHTML="<p style='text-align:center;'>EMPTY</p>"; 
-            document.getElementById('pay-area').style.display='none'; 
-            document.getElementById('total-container').style.display = 'none';
-        } else { 
-            c.innerHTML=cart.map(i=>`<div class="card"><div>@${i.u}</div><button class="btn-del" onclick="removeFromCart('${i.u}')">DEL</button></div>`).join(''); 
-            document.getElementById('pay-area').style.display='block'; 
-            document.getElementById('total-container').style.display = 'block';
-            document.getElementById('total-price').innerText = cart.reduce((s, i) => s + parseFloat(i.p), 0);
-        }
+        if(cart.length==0) { c.innerHTML="<p style='text-align:center;'>EMPTY</p>"; document.getElementById('pay-area').style.display='none'; }
+        else { c.innerHTML=cart.map(i=>`<div class="card"><div>@${i.u}</div><button class="btn-del" onclick="removeFromCart('${i.u}')">DEL</button></div>`).join(''); document.getElementById('pay-area').style.display='block'; }
     }
 
     function removeFromCart(u) { cart = cart.filter(i => i.u !== u); document.getElementById('count').innerText = cart.length; renderCart(); }
-
-    function updatePayInfo() {
-        const v = document.getElementById('pay-sel').value;
-        const p = allP.find(x=>x.startsWith(v+'|'));
-        if(p) { 
-            const val = p.split('|')[1];
-            document.getElementById('pay-info').innerHTML = `<span>${val}</span> <button class="btn-small" onclick="copyData('${val}')">COPY</button>`;
-            document.getElementById('pay-info').style.display='block'; 
-        }
-    }
-
-    function copyData(t) { navigator.clipboard.writeText(t); tg.HapticFeedback.impactOccurred('light'); }
 
     async function sendOrder() {
         const f = document.getElementById('receipt').files[0];
@@ -164,11 +132,20 @@
         }
     }
 
-    function renderAdminItems() { document.getElementById('admin-items-list').innerHTML = allI.map(i => `<div class="card"><span>@${i.u}</span><button class="btn-del" onclick="delUser('${i.u}')">DEL</button></div>`).join(''); }
-    async function delUser(u) { await fetch(`${API}/admin/delete_user`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:tg.initDataUnsafe.user.id, username:u})}); load(); }
-    async function addAccs() { const d = document.getElementById('admin-in').value; const c = document.getElementById('admin-cat').value; await fetch(`${API}/admin/add`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:tg.initDataUnsafe.user.id, data:d, cat:c})}); document.getElementById('admin-in').value=""; load(); }
-    async function addP() { const n = document.getElementById('p-name').value; const v = document.getElementById('p-val').value; await fetch(`${API}/admin/add_pay`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:tg.initDataUnsafe.user.id, method:n+'|'+v})}); load(); }
-    async function delP(m) { await fetch(`${API}/admin/delete_pay`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:tg.initDataUnsafe.user.id, method:m})}); load(); }
+    function renderAdminItems() {
+        document.getElementById('admin-items-list').innerHTML = allI.map(i => `<div class="card"><span>@${i.u}</span><button class="btn-del" onclick="delUser('${i.u}')">DEL</button></div>`).join('');
+    }
+    
+    async function delUser(u) {
+        await fetch(`${API}/admin/delete_user`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:tg.initDataUnsafe.user.id, username:u})});
+        load(); setTimeout(renderAdminItems, 500);
+    }
+
+    async function addAccs() {
+        const d = document.getElementById('admin-in').value;
+        await fetch(`${API}/admin/add`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:tg.initDataUnsafe.user.id, data:d})});
+        document.getElementById('admin-in').value=""; load();
+    }
 
     tg.expand(); load();
 </script>
