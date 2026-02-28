@@ -12,6 +12,7 @@
         .container { padding: 15px; }
         .card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
         .btn { background: var(--main); color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; cursor: pointer; margin-top: 5px; }
+        .btn-red { background: #d9534f; width: auto; padding: 5px 10px; }
         .navbar { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #ddd; }
         .nav-item { cursor: pointer; color: #666; font-size: 14px; }
         .active { color: var(--main); font-weight: bold; }
@@ -23,40 +24,37 @@
 <body>
 <div class="header"><h2 id="title">Tik Market</h2></div>
 <div class="container">
-    <div id="store-tab" class="tab active">
-        <div id="items-list">Loading...</div>
-    </div>
+    <div id="store-tab" class="tab active"><div id="items-list">Loading...</div></div>
     <div id="cart-tab" class="tab">
-        <div id="cart-items">Your cart is empty</div>
-        <div id="checkout-form" style="display:none; margin-top:20px;">
-            <h4>Select Payment Method:</h4>
-            <select id="pay-method"></select>
-            <h4>Upload Payment Receipt:</h4>
-            <input type="file" id="receipt-file" accept="image/*">
+        <div id="cart-items">Empty</div>
+        <div id="checkout-form" style="display:none;">
+            <h4>Method:</h4><select id="pay-method"></select>
+            <h4>Receipt:</h4><input type="file" id="receipt-file" accept="image/*">
             <button class="btn" onclick="submitOrder()">Submit Order</button>
         </div>
     </div>
     <div id="admin-tab" class="tab">
-        <h4>Add New Account</h4>
+        <h4>Add Account</h4>
         <input type="text" id="new-acc" placeholder="user:pass:price">
         <button class="btn" onclick="addAcc()">Add Account</button>
         <hr>
-        <h4>Payment Settings</h4>
+        <h4>Manage Accounts</h4>
+        <div id="admin-items-list"></div>
+        <hr>
+        <h4>Payment Methods</h4>
         <input type="text" id="new-method" placeholder="Method Name">
         <button class="btn" onclick="addPay()">Add Method</button>
     </div>
 </div>
 <nav class="navbar">
-    <div class="nav-item active" onclick="showTab('store-tab', 'Tik Market')">Store</div>
+    <div class="nav-item active" onclick="showTab('store-tab', 'Store')">Store</div>
     <div class="nav-item" onclick="showTab('cart-tab', 'Cart')">Cart (<span id="count">0</span>)</div>
     <div id="admin-btn" class="nav-item" style="display:none;" onclick="showTab('admin-tab', 'Admin')">Admin</div>
 </nav>
-
 <script>
     const tg = window.Telegram.WebApp;
     const API = "https://laquita-unperturbed-altagracia.ngrok-free.dev";
     let cart = [];
-
     function showTab(id, t) {
         document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
@@ -64,34 +62,33 @@
         document.getElementById('title').innerText = t;
         event.currentTarget.classList.add('active');
     }
-
     async function load() {
-        try {
-            const r = await fetch(`${API}/get_all`, {headers:{"ngrok-skip-browser-warning":"true"}});
-            const d = await r.json();
-            if(tg.initDataUnsafe.user.id == 5939498558) document.getElementById('admin-btn').style.display='block';
-            
-            document.getElementById('items-list').innerHTML = d.items.map(i => `
-                <div class="card">
-                    <div><strong>@${i.u}</strong><br>${i.p}$</div>
-                    <button onclick="addToCart('${i.u}','${i.p}')" style="background:#0088cc;color:white;border:none;padding:5px 10px;border-radius:5px;">Add</button>
-                </div>`).join('');
-            
-            document.getElementById('pay-method').innerHTML = d.payments.map(p => `<option value="${p}">${p}</option>`).join('');
-        } catch(e) { console.log(e); }
+        const r = await fetch(`${API}/get_all`, {headers:{"ngrok-skip-browser-warning":"true"}});
+        const d = await r.json();
+        if(tg.initDataUnsafe.user.id == 5939498558) document.getElementById('admin-btn').style.display='block';
+        
+        document.getElementById('items-list').innerHTML = d.items.map(i => `<div class="card"><div>@${i.u}<br>${i.p}$</div><button class="btn" style="width:auto" onclick="addToCart('${i.u}','${i.p}')">Add</button></div>`).join('');
+        document.getElementById('admin-items-list').innerHTML = d.items.map(i => `<div class="card"><div>@${i.u}</div><button class="btn btn-red" onclick="deleteAcc('${i.u}')">Delete</button></div>`).join('');
+        document.getElementById('pay-method').innerHTML = d.payments.map(p => `<option value="${p}">${p}</option>`).join('');
     }
-
     function addToCart(u, p) {
         cart.push({u, p});
         document.getElementById('count').innerText = cart.length;
         document.getElementById('cart-items').innerHTML = cart.map(i => `<div class="card">@${i.u} - ${i.p}$</div>`).join('');
         document.getElementById('checkout-form').style.display = 'block';
     }
-
+    async function deleteAcc(user) {
+        if(confirm("Delete " + user + "?")) {
+            await fetch(`${API}/admin/delete_item`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({u: user, user_id: tg.initDataUnsafe.user.id})
+            });
+            load();
+        }
+    }
     async function submitOrder() {
         const file = document.getElementById('receipt-file').files[0];
-        if(!file) return alert("Upload receipt image");
-        
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = async () => {
@@ -100,7 +97,7 @@
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
                     user_id: tg.initDataUnsafe.user.id,
-                    user_name: tg.initDataUnsafe.user.username || "Guest",
+                    user_name: tg.initDataUnsafe.user.username || "User",
                     items: cart,
                     method: document.getElementById('pay-method').value,
                     image: reader.result,
@@ -110,29 +107,15 @@
             tg.close();
         };
     }
-
     async function addAcc() {
-        const val = document.getElementById('new-acc').value;
-        await fetch(`${API}/admin/add`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({data: val, user_id: tg.initDataUnsafe.user.id})
-        });
+        await fetch(`${API}/admin/add`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({data:document.getElementById('new-acc').value, user_id:tg.initDataUnsafe.user.id})});
         location.reload();
     }
-
     async function addPay() {
-        const val = document.getElementById('new-method').value;
-        await fetch(`${API}/admin/add_pay`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({method: val, user_id: tg.initDataUnsafe.user.id})
-        });
+        await fetch(`${API}/admin/add_pay`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({method:document.getElementById('new-method').value, user_id:tg.initDataUnsafe.user.id})});
         location.reload();
     }
-
-    tg.expand();
-    load();
+    tg.expand(); load();
 </script>
 </body>
 </html>
