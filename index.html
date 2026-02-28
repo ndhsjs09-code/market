@@ -3,58 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tik Market</title>
+    <title>Tik Market Pro</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { --main: #ff2d75; --bg: #000000; --card: #1a1a1a; }
         html, body { margin:0; padding:0; background:var(--bg); color:white; font-family:sans-serif; overflow-x:hidden; -webkit-text-size-adjust:100%; }
-        .header { padding:20px; text-align:center; border-bottom:2px solid var(--main); }
+        .header { padding:20px; text-align:center; border-bottom:2px solid var(--main); position:relative; }
+        .back-btn { position:absolute; left:15px; top:22px; color:var(--main); border:1px solid var(--main); padding:5px 10px; border-radius:8px; font-size:12px; display:none; }
         .container { padding:20px; padding-bottom:100px; }
         .tab { display:none; } .active { display:block; }
         .card { background:var(--card); padding:15px; border-radius:12px; border:1px solid var(--main); margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; }
-        .btn { background:var(--main); color:white; border:none; padding:12px; border-radius:10px; width:100%; font-weight:bold; cursor:pointer; }
-        textarea, input { width:100%; padding:15px; margin:10px 0; border-radius:10px; border:1px solid #444; background:#222; color:white; font-size:16px !important; box-sizing:border-box; }
-        .navbar { position:fixed; bottom:0; width:100%; background:#111; display:flex; justify-content:space-around; padding:15px 0; border-top:2px solid var(--main); }
+        .btn { background:var(--main); color:white; border:none; padding:12px; border-radius:10px; width:100%; font-weight:bold; cursor:pointer; margin-top:5px; }
+        .btn-red { background:#ff0000; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-size:12px; }
+        textarea, input, select { width:100%; padding:15px; margin:10px 0; border-radius:10px; border:1px solid #444; background:#222; color:white; font-size:16px !important; box-sizing:border-box; outline:none; }
+        .navbar { position:fixed; bottom:0; width:100%; background:#111; display:flex; justify-content:space-around; padding:15px 0; border-top:2px solid var(--main); z-index:1000; }
         .nav-item { color:#888; cursor:pointer; font-weight:bold; }
-        .nav-item.active-nav { color:var(--main); }
+        .active-nav { color:var(--main); }
     </style>
 </head>
 <body>
 
-<div class="header"><h2>TIK MARKET</h2></div>
+<div class="header">
+    <div id="back-btn" class="back-btn" onclick="showCats()">Back</div>
+    <h2 id="main-title">TIK MARKET</h2>
+</div>
 
 <div class="container">
     <div id="store-tab" class="tab active">
-        <div id="cats">
-            <button class="btn" style="margin-bottom:10px" onclick="filter('3C/L')">3C/L</button>
-            <button class="btn" style="margin-bottom:10px" onclick="filter('4CC/LL')">4CC/LL</button>
-            <button class="btn" style="margin-bottom:10px" onclick="filter('4C/L')">4C/L</button>
-            <button class="btn" style="margin-bottom:10px" onclick="filter('Double/Triple')">Double/Triple</button>
+        <div id="cats-menu">
+            <div class="card" onclick="filter('3C/L')">3C/L</div>
+            <div class="card" onclick="filter('4CC/LL')">4CC/LL</div>
+            <div class="card" onclick="filter('4C/L Same')">4C/L Same</div>
+            <div class="card" onclick="filter('4C/L')">4C/L</div>
+            <div class="card" onclick="filter('Double/Triple')">Double/Triple</div>
         </div>
-        <div id="items-list"></div>
+        <div id="items-view" style="display:none"></div>
+    </div>
+
+    <div id="cart-tab" class="tab">
+        <h4>Cart</h4>
+        <div id="cart-list">Empty</div>
+        <div id="checkout" style="display:none">
+            <select id="pay-sel" onchange="updatePay()"></select>
+            <div id="pay-box" style="display:none; padding:10px; border:1px solid var(--main); margin:10px 0; border-radius:10px;">
+                <span id="pay-txt"></span>
+            </div>
+            <input type="file" id="receipt" accept="image/*">
+            <button class="btn" onclick="sendOrder()">Submit Order</button>
+        </div>
     </div>
 
     <div id="admin-tab" class="tab">
-        <h3>Admin Panel</h3>
-        <textarea id="mass-input" placeholder="user|pass|price" style="height:150px"></textarea>
-        <button class="btn" onclick="sendMass()">IMPORT ALL DATA</button>
-        <div id="admin-list" style="margin-top:20px"></div>
+        <h3>Mass Import</h3>
+        <textarea id="mass-in" placeholder="user|info|price" style="height:100px"></textarea>
+        <button class="btn" onclick="addMass()">Import All</button>
+        
+        <hr style="border:0; border-top:1px solid #333; margin:20px 0">
+        
+        <h3>Single Add</h3>
+        <input id="one-user" placeholder="Username">
+        <input id="one-info" placeholder="Info">
+        <input id="one-price" placeholder="Price">
+        <button class="btn" onclick="addOne()">Add Single</button>
+
+        <hr style="border:0; border-top:1px solid #333; margin:20px 0">
+
+        <h3>Payments</h3>
+        <input id="p-name" placeholder="Method Name">
+        <input id="p-val" placeholder="Wallet Details">
+        <button class="btn" onclick="savePay()">Save Payment</button>
+
+        <hr style="border:0; border-top:1px solid #333; margin:20px 0">
+        
+        <div id="admin-items"></div>
+        <div id="admin-pays"></div>
     </div>
 </div>
 
 <div class="navbar">
-    <div class="nav-item active-nav" onclick="tab('store-tab')">STORE</div>
+    <div class="nav-item active-nav" onclick="tab('store-tab')">MAIN</div>
+    <div class="nav-item" onclick="tab('cart-tab')">CART (<span id="count">0</span>)</div>
     <div id="admin-btn" class="nav-item" style="display:none" onclick="tab('admin-tab')">ADMIN</div>
 </div>
 
 <script>
     const tg = window.Telegram.WebApp;
     const API = "https://laquita-unperturbed-altagracia.ngrok-free.dev";
-    let allData = [];
+    let cart = [], allItems = [], pays = [];
 
-    if(tg.initDataUnsafe.user && tg.initDataUnsafe.user.id == 5939498558) {
-        document.getElementById('admin-btn').style.display = 'block';
-    }
+    if(tg.initDataUnsafe.user && tg.initDataUnsafe.user.id == 5939498558) document.getElementById('admin-btn').style.display = 'block';
 
     function tab(id) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -66,29 +103,74 @@
     async function load() {
         const r = await fetch(`${API}/get_all`, {headers:{"ngrok-skip-browser-warning":"true"}});
         const d = await r.json();
-        allData = d.items;
-        document.getElementById('admin-list').innerHTML = d.items.map(i => `<div class="card"><span>@${i.u}</span></div>`).join('');
+        allItems = d.items; pays = d.payments;
+        document.getElementById('admin-items').innerHTML = d.items.map(i => `<div class="card"><span>@${i.u}</span><button class="btn-red" onclick="delAcc('${i.u}')">DEL</button></div>`).join('');
+        document.getElementById('admin-pays').innerHTML = d.payments.map(p => `<div class="card"><span>${p.split('|')[0]}</span><button class="btn-red" onclick="delPay('${p}')">DEL</button></div>`).join('');
+        document.getElementById('pay-sel').innerHTML = '<option disabled selected>Select Payment</option>' + d.payments.map(p => `<option value="${p.split('|')[0]}">${p.split('|')[0]}</option>`).join('');
     }
 
     function filter(c) {
-        const filtered = allData.filter(i => i.c == c);
-        document.getElementById('items-list').innerHTML = filtered.map(i => `<div class="card"><span>@${i.u} - $${i.p}</span></div>`).join('');
+        const f = allItems.filter(i => i.c == c);
+        document.getElementById('cats-menu').style.display = 'none';
+        document.getElementById('items-view').style.display = 'block';
+        document.getElementById('back-btn').style.display = 'block';
+        document.getElementById('main-title').innerText = c;
+        document.getElementById('items-view').innerHTML = f.map(i => `<div class="card"><div>@${i.u}<br>$${i.p}</div><button class="btn" style="width:auto" onclick="addToCart('${i.u}','${i.p}')">Add</button></div>`).join('');
     }
 
-    async function sendMass() {
-        const val = document.getElementById('mass-input').value;
-        if(!val) return;
-        await fetch(`${API}/admin/add`, {
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({data:val, user_id:tg.initDataUnsafe.user.id})
-        });
-        document.getElementById('mass-input').value = '';
-        load();
+    function showCats() {
+        document.getElementById('cats-menu').style.display = 'block';
+        document.getElementById('items-view').style.display = 'none';
+        document.getElementById('back-btn').style.display = 'none';
+        document.getElementById('main-title').innerText = 'TIK MARKET';
     }
 
-    tg.expand();
-    load();
+    function addToCart(u, p) {
+        cart.push({u, p});
+        document.getElementById('count').innerText = cart.length;
+        document.getElementById('cart-list').innerHTML = cart.map(i => `<div class="card">@${i.u} - $${i.p}</div>`).join('');
+        document.getElementById('checkout').style.display = 'block';
+        tg.HapticFeedback.impactOccurred('medium');
+    }
+
+    async function addMass() {
+        const d = document.getElementById('mass-in').value;
+        await fetch(`${API}/admin/add`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({data:d, user_id:tg.initDataUnsafe.user.id})});
+        document.getElementById('mass-in').value = ''; load();
+    }
+
+    async function addOne() {
+        const d = `${document.getElementById('one-user').value}|${document.getElementById('one-info').value}|${document.getElementById('one-price').value}`;
+        await fetch(`${API}/admin/add`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({data:d, user_id:tg.initDataUnsafe.user.id})});
+        document.getElementById('one-user').value=''; document.getElementById('one-info').value=''; document.getElementById('one-price').value=''; load();
+    }
+
+    async function savePay() {
+        const s = document.getElementById('p-name').value + "|" + document.getElementById('p-val').value;
+        await fetch(`${API}/admin/add_pay`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({method:s, user_id:tg.initDataUnsafe.user.id})});
+        document.getElementById('p-name').value=''; document.getElementById('p-val').value=''; load();
+    }
+
+    async function delAcc(u) { await fetch(`${API}/admin/delete_item`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({u:u, user_id:tg.initDataUnsafe.user.id})}); load(); }
+    async function delPay(p) { await fetch(`${API}/admin/delete_pay`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({method:p, user_id:tg.initDataUnsafe.user.id})}); load(); }
+
+    function updatePay() {
+        const v = document.getElementById('pay-sel').value;
+        const f = pays.find(p => p.startsWith(v + "|"));
+        if(f) { document.getElementById('pay-txt').innerText = f.split('|')[1]; document.getElementById('pay-box').style.display = 'block'; }
+    }
+
+    async function sendOrder() {
+        const f = document.getElementById('receipt').files[0];
+        if(!f) return;
+        const r = new FileReader(); r.readAsDataURL(f);
+        r.onload = async () => {
+            await fetch(`${API}/submit_order`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:tg.initDataUnsafe.user.id, user_name:tg.initDataUnsafe.user.username||"User", items:cart, method:document.getElementById('pay-sel').value, image:r.result, total:cart.reduce((s,i)=>s+parseFloat(i.p),0)})});
+            tg.close();
+        };
+    }
+
+    tg.expand(); load();
 </script>
 </body>
 </html>
