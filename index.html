@@ -14,13 +14,14 @@
         .card { background: var(--card); border: 1px solid #1f1f1f; padding: 18px; border-radius: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.6); }
         .btn { background: var(--main); color: #000; border: none; padding: 14px; border-radius: 12px; cursor: pointer; width: 100%; font-weight: 800; text-transform: uppercase; transition: 0.3s; }
         .btn:active { transform: scale(0.95); background: var(--accent); }
-        .btn-del { background: #ff4d6d; color: #fff; padding: 8px 12px; width: auto; font-size: 11px; border-radius: 8px; }
+        .btn-del { background: #ff4d6d; color: #fff; padding: 8px 12px; width: auto; font-size: 11px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; }
         .nav { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(15,15,15,0.9); backdrop-filter: blur(15px); display: flex; justify-content: space-around; padding: 18px 0; border-top: 1px solid #222; z-index: 1000; }
         .nav-item { color: #555; cursor: pointer; font-size: 13px; font-weight: bold; } .nav-item.active-nav { color: var(--main); text-shadow: 0 0 10px var(--main); }
         input, textarea, select { width: 100%; padding: 14px; margin: 10px 0; background: #111; color: #fff; border: 1px solid #222; border-radius: 10px; outline: none; }
         .cat-card { background: linear-gradient(145deg, #141414, #0f0f0f); padding: 30px; border-radius: 20px; margin-bottom: 15px; text-align: center; border: 1px solid #222; cursor: pointer; font-size: 20px; font-weight: 900; color: var(--main); }
         .copy-wrapper { display: flex; justify-content: space-between; align-items: center; width: 100%; }
         .copy-inner-btn { background: var(--main); color: #000; border: none; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; }
+        .empty-msg { text-align: center; color: #666; font-weight: bold; margin-top: 50px; font-size: 18px; text-transform: uppercase; letter-spacing: 1px; }
     </style>
 </head>
 <body>
@@ -111,26 +112,50 @@
         document.getElementById('cat-menu').style.display='none';
         document.getElementById('items-view').style.display='block';
         const filtered = allI.filter(i => i.c == c);
-        document.getElementById('items-list').innerHTML = filtered.map(i => `<div class="card"><div><b style="color:var(--main); font-size:16px;">@${i.u}</b><br><small style="color:#666">$${i.p}</small></div><button class="btn" style="width:auto" onclick="addToCart('${i.u}','${i.p}')">ADD</button></div>`).join('');
+        const list = document.getElementById('items-list');
+        
+        if (filtered.length === 0) {
+            list.innerHTML = `<div class="empty-msg">SOLD OUT</div>`;
+        } else {
+            list.innerHTML = filtered.map(i => `<div class="card"><div><b style="color:var(--main); font-size:16px;">@${i.u}</b><br><small style="color:#666">$${i.p}</small></div><button class="btn" style="width:auto" onclick="addToCart('${i.u}','${i.p}')">ADD</button></div>`).join('');
+        }
     }
 
     function backToCats() { document.getElementById('cat-menu').style.display='block'; document.getElementById('items-view').style.display='none'; }
 
-    function renderAdminItems() {
-        document.getElementById('admin-items-list').innerHTML = allI.map(i => `<div class="card" style="padding:10px; font-size:13px"><span>@${i.u}</span><button class="btn btn-del" onclick="delUser('${i.u}')">REMOVE</button></div>`).join('');
+    function addToCart(u,p) { 
+        if(cart.find(x => x.u === u)) return;
+        cart.push({u,p}); 
+        updateCartCount();
+        renderCart(); 
+        tg.HapticFeedback.notificationOccurred('success'); 
     }
 
-    async function delUser(u) {
-        await fetch(`${API}/admin/delete_user`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:tg.initDataUnsafe.user.id, username:u})});
-        load(); setTimeout(renderAdminItems, 400);
+    function removeFromCart(u) {
+        cart = cart.filter(i => i.u !== u);
+        updateCartCount();
+        renderCart();
+        tg.HapticFeedback.impactOccurred('medium');
     }
 
-    function addToCart(u,p) { cart.push({u,p}); document.getElementById('count').innerText=cart.length; renderCart(); tg.HapticFeedback.notificationOccurred('success'); }
+    function updateCartCount() {
+        document.getElementById('count').innerText = cart.length;
+    }
     
     function renderCart() {
         const c = document.getElementById('cart-list');
-        if(cart.length==0) { c.innerHTML="<p style='color:#444; text-align:center;'>CART IS EMPTY</p>"; document.getElementById('pay-area').style.display='none'; }
-        else { c.innerHTML=cart.map(i=>`<div class="card">@${i.u}<span style="color:var(--main)">$${i.p}</span></div>`).join(''); document.getElementById('pay-area').style.display='block'; }
+        if(cart.length==0) { 
+            c.innerHTML="<p style='color:#444; text-align:center;'>CART IS EMPTY</p>"; 
+            document.getElementById('pay-area').style.display='none'; 
+        } else { 
+            c.innerHTML=cart.map(i=>`
+                <div class="card">
+                    <div>@${i.u}<br><span style="color:var(--main)">$${i.p}</span></div>
+                    <button class="btn-del" onclick="removeFromCart('${i.u}')">REMOVE</button>
+                </div>
+            `).join(''); 
+            document.getElementById('pay-area').style.display='block'; 
+        }
     }
 
     function updatePayInfo() {
@@ -151,6 +176,15 @@
             setTimeout(() => { btn.innerText = "COPY"; }, 1500);
             tg.HapticFeedback.impactOccurred('light');
         });
+    }
+
+    function renderAdminItems() {
+        document.getElementById('admin-items-list').innerHTML = allI.map(i => `<div class="card" style="padding:10px; font-size:13px"><span>@${i.u}</span><button class="btn btn-del" onclick="delUser('${i.u}')">REMOVE</button></div>`).join('');
+    }
+
+    async function delUser(u) {
+        await fetch(`${API}/admin/delete_user`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:tg.initDataUnsafe.user.id, username:u})});
+        load(); setTimeout(renderAdminItems, 400);
     }
 
     async function addAccs() {
