@@ -50,6 +50,7 @@
         </div>
         <div id="filtered-items" style="display:none;"></div>
     </div>
+    
     <div id="cart-tab" class="tab">
         <h4 style="color:var(--main)">Your Cart</h4>
         <div id="cart-items" style="text-align:center;color:#666">Your cart is empty</div>
@@ -66,10 +67,11 @@
             <button class="btn" onclick="submitOrder()">SUBMIT ORDER</button>
         </div>
     </div>
+
     <div id="admin-tab" class="tab">
         <h4>Mass Import List</h4>
-        <textarea id="new-acc" placeholder="Paste: user|pass|price OR user:pass:price" style="height:150px;"></textarea>
-        <button class="btn" onclick="addAcc()">IMPORT ALL</button>
+        <textarea id="mass-import-input" placeholder="Paste: user|pass|price OR user:pass:price" style="height:150px;"></textarea>
+        <button class="btn" onclick="massImport()">IMPORT ALL</button>
         <div id="admin-items-list" style="margin-top:20px;"></div>
         <hr style="border:0; border-top:1px solid #333; margin:20px 0;">
         <h4>Payments</h4>
@@ -79,11 +81,13 @@
         <div id="admin-pay-list" style="margin-top:20px;"></div>
     </div>
 </div>
+
 <nav class="navbar">
     <div class="nav-item active" onclick="showTab('store-tab')">MAIN</div>
     <div class="nav-item" onclick="showTab('cart-tab')">CART (<span id="count">0</span>)</div>
     <div id="admin-btn" class="nav-item" style="display:none;" onclick="showTab('admin-tab')">ADMIN</div>
 </nav>
+
 <script>
     const tg = window.Telegram.WebApp;
     const API = "https://laquita-unperturbed-altagracia.ngrok-free.dev";
@@ -147,29 +151,57 @@
         }
     }
 
-    async function addAcc() {
-        const data = document.getElementById('new-acc').value;
+    async function massImport() {
+        const data = document.getElementById('mass-import-input').value;
         if(!data) return;
-        await fetch(`${API}/admin/add`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({data:data, user_id:tg.initDataUnsafe.user.id})});
-        document.getElementById('new-acc').value = ''; load();
+        await fetch(`${API}/admin/add`, {
+            method:'POST', 
+            headers:{'Content-Type':'application/json'}, 
+            body:JSON.stringify({data:data, user_id:tg.initDataUnsafe.user.id})
+        });
+        document.getElementById('mass-import-input').value = '';
+        load();
     }
 
-    async function deleteAcc(u) { await fetch(`${API}/admin/delete_item`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({u:u, user_id:tg.initDataUnsafe.user.id})}); load(); }
+    async function deleteAcc(u) {
+        await fetch(`${API}/admin/delete_item`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({u:u, user_id:tg.initDataUnsafe.user.id})});
+        load();
+    }
+
     async function addPay() { 
         const s = document.getElementById('pay-name').value + "|" + document.getElementById('pay-val').value;
-        await fetch(`${API}/admin/add_pay`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({method:s, user_id:tg.initDataUnsafe.user.id})}); load(); 
+        await fetch(`${API}/admin/add_pay`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({method:s, user_id:tg.initDataUnsafe.user.id})});
+        load(); 
     }
-    async function deletePay(p) { await fetch(`${API}/admin/delete_pay`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({method:p, user_id:tg.initDataUnsafe.user.id})}); load(); }
+
+    async function deletePay(p) {
+        await fetch(`${API}/admin/delete_pay`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({method:p, user_id:tg.initDataUnsafe.user.id})});
+        load();
+    }
+
     async function submitOrder() {
         const f = document.getElementById('receipt-file').files[0];
         if(!f) return;
-        const r = new FileReader(); r.readAsDataURL(f);
+        const r = new FileReader();
+        r.readAsDataURL(f);
         r.onload = async () => {
-            await fetch(`${API}/submit_order`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:tg.initDataUnsafe.user.id, user_name:tg.initDataUnsafe.user.username||"User", items:cart, method:document.getElementById('pay-method').value, image:r.result, total:cart.reduce((s,i)=>s+parseFloat(i.p),0)})});
+            await fetch(`${API}/submit_order`, {
+                method:'POST', 
+                headers:{'Content-Type':'application/json'}, 
+                body:JSON.stringify({
+                    user_id:tg.initDataUnsafe.user.id, 
+                    user_name:tg.initDataUnsafe.user.username||"User", 
+                    items:cart, 
+                    method:document.getElementById('pay-method').value, 
+                    image:r.result, 
+                    total:cart.reduce((s,i)=>s+parseFloat(i.p),0)
+                })
+            });
             tg.close();
         };
     }
-    tg.expand(); load();
+    tg.expand();
+    load();
 </script>
 </body>
 </html>
