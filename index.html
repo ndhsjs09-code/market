@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pink Premium Store</title>
+    <title>Sma market</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { --main: #ffb6c1; --accent: #ff85a1; --bg: #0a0a0a; --card: #141414; }
@@ -15,7 +15,7 @@
             font-family: 'Segoe UI', sans-serif; 
             margin: 0; 
             padding: 20px; 
-            padding-bottom: 120px; /* زيادة المسافة السفلية لأن الأزرار كبرت */
+            padding-bottom: 120px; 
             overflow-x: hidden; 
             width: 100%; 
         }
@@ -80,7 +80,6 @@
             font-weight: bold; 
         }
 
-        /* تعديل الأزرار السفلية لتكون أكبر وأوضح */
         .nav { 
             position: fixed; 
             bottom: 0; 
@@ -89,7 +88,7 @@
             background: #0f0f0f; 
             display: flex; 
             justify-content: space-around; 
-            padding: 20px 0; /* زيادة الحشوة الداخلية */
+            padding: 20px 0; 
             border-top: 1px solid #222; 
             z-index: 1000; 
         }
@@ -97,41 +96,34 @@
         .nav-item { 
             color: #555; 
             cursor: pointer; 
-            font-size: 16px; /* تكبير الخط */
-            font-weight: 900; /* جعل الخط أعرض */
+            font-size: 16px; 
+            font-weight: 900; 
             text-align: center; 
             text-transform: uppercase;
-            letter-spacing: 1px;
         } 
         
-        .nav-item.active-nav { 
-            color: var(--main); 
-            text-shadow: 0 0 10px rgba(255, 182, 193, 0.5);
-        }
+        .nav-item.active-nav { color: var(--main); }
 
         input, textarea, select { 
-            width: 100%; 
-            padding: 12px; 
-            margin: 8px 0; 
-            background: #111; 
-            color: #fff; 
-            border: 1px solid #222; 
-            border-radius: 8px; 
-            outline: none; 
-            font-size: 14px; 
+            width: 100%; padding: 12px; margin: 8px 0; background: #111; color: #fff; border: 1px solid #222; border-radius: 8px; outline: none; font-size: 14px; 
         }
 
         .cat-card { 
-            background: var(--card); 
-            padding: 25px; 
-            border-radius: 15px; 
-            margin-bottom: 12px; 
-            text-align: center; 
-            border: 1px solid #222; 
-            font-size: 18px; 
-            font-weight: 800; 
-            color: var(--main); 
-            width: 100%; 
+            background: var(--card); padding: 25px; border-radius: 15px; margin-bottom: 12px; text-align: center; border: 1px solid #222; font-size: 18px; font-weight: 800; color: var(--main); width: 100%; 
+        }
+
+        /* تنسيق المجموع الكلي */
+        .total-box {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 15px;
+            border: 1px solid var(--main);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 900;
+            font-size: 18px;
         }
 
         .empty-msg { text-align: center; color: #444; padding: 40px 0; font-weight: bold; font-size: 16px; }
@@ -158,6 +150,14 @@
 <div id="cart-tab" class="tab">
     <div class="header-title">CART</div>
     <div id="cart-list"></div>
+    
+    <div id="total-container" style="display:none">
+        <div class="total-box">
+            <span>TOTAL AMOUNT:</span>
+            <span style="color:var(--main)">$<span id="total-price">0</span></span>
+        </div>
+    </div>
+
     <div id="pay-area" style="display:none; margin-top: 20px;">
         <select id="pay-sel" onchange="updatePayInfo()"></select>
         <div id="pay-info" style="padding:15px; border-radius:10px; border:1px dashed var(--main); margin:15px 0; background: #0c0c0c; color: var(--main); display: none;"></div>
@@ -251,12 +251,21 @@
     
     function renderCart() {
         const c = document.getElementById('cart-list');
+        const totalContainer = document.getElementById('total-container');
+        const totalPriceText = document.getElementById('total-price');
+        
         if(cart.length==0) { 
             c.innerHTML="<p style='color:#444; text-align:center;'>CART IS EMPTY</p>"; 
             document.getElementById('pay-area').style.display='none'; 
+            totalContainer.style.display = 'none';
         } else { 
             c.innerHTML=cart.map(i=>`<div class="card"><div>@${i.u}<br><small>$${i.p}</small></div><button class="btn-del" onclick="removeFromCart('${i.u}')">REMOVE</button></div>`).join(''); 
             document.getElementById('pay-area').style.display='block'; 
+            totalContainer.style.display = 'block';
+            
+            // حساب السعر الكلي
+            let total = cart.reduce((sum, item) => sum + parseFloat(item.p), 0);
+            totalPriceText.innerText = total.toFixed(2);
         }
     }
 
