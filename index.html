@@ -7,7 +7,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { --main: #0088cc; --bg: #f4f4f9; }
-        body { font-family: sans-serif; margin: 0; padding-bottom: 80px; background: var(--bg); }
+        body { font-family: sans-serif; margin: 0; padding-bottom: 80px; background: var(--bg); direction: ltr; }
         .header { background: var(--main); color: white; padding: 15px; text-align: center; }
         .container { padding: 15px; }
         .card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
@@ -29,19 +29,19 @@
     <div id="cart-tab" class="tab">
         <div id="cart-items">Your cart is empty</div>
         <div id="checkout-form" style="display:none; margin-top:20px;">
-            <h4>Payment Method:</h4>
+            <h4>Select Payment Method:</h4>
             <select id="pay-method"></select>
-            <h4>Upload Receipt (Image):</h4>
+            <h4>Upload Payment Receipt:</h4>
             <input type="file" id="receipt-file" accept="image/*">
             <button class="btn" onclick="submitOrder()">Submit Order</button>
         </div>
     </div>
     <div id="admin-tab" class="tab">
-        <h4>Add Account</h4>
+        <h4>Add New Account</h4>
         <input type="text" id="new-acc" placeholder="user:pass:price">
-        <button class="btn" onclick="addAcc()">Add to Inventory</button>
+        <button class="btn" onclick="addAcc()">Add Account</button>
         <hr>
-        <h4>Payment Methods</h4>
+        <h4>Payment Settings</h4>
         <input type="text" id="new-method" placeholder="Method Name">
         <button class="btn" onclick="addPay()">Add Method</button>
     </div>
@@ -66,17 +66,19 @@
     }
 
     async function load() {
-        const r = await fetch(`${API}/get_all`, {headers:{"ngrok-skip-browser-warning":"true"}});
-        const d = await r.json();
-        if(tg.initDataUnsafe.user.id == 5939498558) document.getElementById('admin-btn').style.display='block';
-        
-        document.getElementById('items-list').innerHTML = d.items.map(i => `
-            <div class="card">
-                <div><strong>@${i.u}</strong><br>${i.p}$</div>
-                <button onclick="addToCart('${i.u}','${i.p}')" style="background:#0088cc;color:white;border:none;padding:5px 10px;border-radius:5px;">Add</button>
-            </div>`).join('');
-        
-        document.getElementById('pay-method').innerHTML = d.payments.map(p => `<option value="${p}">${p}</option>`).join('');
+        try {
+            const r = await fetch(`${API}/get_all`, {headers:{"ngrok-skip-browser-warning":"true"}});
+            const d = await r.json();
+            if(tg.initDataUnsafe.user.id == 5939498558) document.getElementById('admin-btn').style.display='block';
+            
+            document.getElementById('items-list').innerHTML = d.items.map(i => `
+                <div class="card">
+                    <div><strong>@${i.u}</strong><br>${i.p}$</div>
+                    <button onclick="addToCart('${i.u}','${i.p}')" style="background:#0088cc;color:white;border:none;padding:5px 10px;border-radius:5px;">Add</button>
+                </div>`).join('');
+            
+            document.getElementById('pay-method').innerHTML = d.payments.map(p => `<option value="${p}">${p}</option>`).join('');
+        } catch(e) { console.log(e); }
     }
 
     function addToCart(u, p) {
@@ -88,7 +90,7 @@
 
     async function submitOrder() {
         const file = document.getElementById('receipt-file').files[0];
-        if(!file) return alert("Please upload Transaction screen");
+        if(!file) return alert("Upload receipt image");
         
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -98,7 +100,7 @@
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
                     user_id: tg.initDataUnsafe.user.id,
-                    user_name: tg.initDataUnsafe.user.username || "Unknown",
+                    user_name: tg.initDataUnsafe.user.username || "Guest",
                     items: cart,
                     method: document.getElementById('pay-method').value,
                     image: reader.result,
