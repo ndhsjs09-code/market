@@ -7,7 +7,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { --main: #ffb6c1; --bg: #0a0a0a; --card: #141414; }
-        body { background: var(--bg); color: #fff; font-family: sans-serif; padding: 15px; padding-bottom: 100px; margin:0; }
+        body { background: var(--bg); color: #fff; font-family: sans-serif; padding: 15px; padding-bottom: 100px; margin:0; overflow-x: hidden; }
         .tab { display: none; } .active { display: block; }
         .header-title { text-align: center; color: var(--main); font-weight: 900; margin-bottom: 20px; font-size: 24px; }
         .cat-card { background: var(--card); padding: 25px; border-radius: 15px; margin-bottom: 12px; text-align: center; border: 1px solid #222; font-size: 18px; font-weight: 800; color: var(--main); }
@@ -16,12 +16,12 @@
         .btn-small { background: var(--main); color: #000; padding: 6px 12px; border-radius: 6px; border: none; font-weight: bold; font-size: 12px; }
         .btn-del { background: #ff4d6d; color: #fff; padding: 6px 10px; border-radius: 6px; border: none; font-size: 11px; }
         .total-box { background: #1a1a1a; padding: 18px; border-radius: 15px; border: 2px dashed var(--main); margin: 15px 0; display: flex; justify-content: space-between; font-weight: 900; }
-        .pay-info { padding: 12px; border-radius: 10px; background: #000; border: 1px solid #333; margin: 10px 0; color: var(--main); text-align: center; font-size: 13px; }
-        .nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #0f0f0f; display: flex; justify-content: space-around; padding: 20px 0; border-top: 1px solid #222; }
+        .pay-info { padding: 12px; border-radius: 10px; background: #000; border: 1px solid #333; margin: 10px 0; color: var(--main); text-align: center; font-size: 13px; word-break: break-all; }
+        .nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #0f0f0f; display: flex; justify-content: space-around; padding: 20px 0; border-top: 1px solid #222; z-index: 999; }
         .nav-item { color: #555; cursor: pointer; font-weight: 900; font-size: 14px; } .active-nav { color: var(--main); }
-        input, textarea, select { width: 100%; padding: 12px; margin: 6px 0; background: #111; color: #fff; border: 1px solid #222; border-radius: 8px; box-sizing: border-box; }
+        input, textarea, select { width: 100%; padding: 12px; margin: 6px 0; background: #111; color: #fff; border: 1px solid #222; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
         .admin-section { background:#111; padding:12px; border-radius:12px; margin-top:10px; border: 1px solid #222; }
-        h3 { font-size: 14px; color: var(--main); margin: 10px 0; text-transform: uppercase; letter-spacing: 1px; }
+        h3 { font-size: 14px; color: var(--main); margin: 10px 0; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -55,32 +55,24 @@
             <button class="btn-small" onclick="copyPay()" style="width:100%; background:#fff; color:#000;">COPY DETAILS</button>
         </div>
         <input type="file" id="receipt" accept="image/*" style="margin-top:10px">
-        <button class="btn" onclick="sendOrder()">SEND ORDER</button>
+        <button class="btn" id="send-btn" onclick="sendOrder()">SEND ORDER</button>
     </div>
 </div>
 
 <div id="admin-tab" class="tab">
     <div class="header-title">ADMIN PANEL</div>
-    
     <div class="admin-section">
         <h3>Inventory Management</h3>
-        <select id="admin-cat">
-            <option value="Auto">Auto Detect</option>
-            <option value="3C/L">3C/L</option><option value="4CC/LL">4CC/LL</option>
-            <option value="Double/Triple">Double/Triple</option><option value="Others">Others</option>
-        </select>
+        <select id="admin-cat"><option value="Auto">Auto Detect</option><option value="3C/L">3C/L</option><option value="4CC/LL">4CC/LL</option><option value="Double/Triple">Double/Triple</option><option value="Others">Others</option></select>
         <textarea id="admin-in" rows="4" placeholder="user|pass|price"></textarea>
         <button class="btn" onclick="addAccs()">ADD ACCOUNTS</button>
     </div>
-
     <div class="admin-section">
         <h3>Payment Methods</h3>
-        <input id="p-name" placeholder="Method Name">
-        <input id="p-val" placeholder="Wallet Details">
+        <input id="p-name" placeholder="Name"><input id="p-val" placeholder="Details">
         <button class="btn" onclick="addPay()">ADD METHOD</button>
         <div id="admin-pay-list" style="margin-top:10px"></div>
     </div>
-
     <div id="admin-items-list" style="margin-top:15px"></div>
 </div>
 
@@ -95,6 +87,10 @@
     const API = "https://laquita-unperturbed-altagracia.ngrok-free.dev"; 
     const ADMIN_ID = 5939498558;
     let cart = [], allI = [], allP = [];
+
+    // إعداد الأصوات
+    const addSound = new Audio('https://www.soundjay.com/buttons/sounds/button-37.mp3');
+    const delSound = new Audio('https://www.soundjay.com/buttons/sounds/button-10.mp3');
 
     if(tg.initDataUnsafe.user?.id == ADMIN_ID) document.getElementById('admin-btn').style.display='block';
 
@@ -131,8 +127,11 @@
 
     function addToCart(u,p) {
         if(cart.find(x => x.u === u)) return;
-        cart.push({u,p}); renderCart();
+        cart.push({u,p}); 
+        addSound.play(); // تشغيل صوت الإضافة
+        renderCart();
         document.getElementById('count').innerText = cart.length;
+        tg.HapticFeedback.impactOccurred('medium');
     }
 
     function renderCart() {
@@ -145,7 +144,13 @@
         }
     }
 
-    function removeFromCart(u) { cart = cart.filter(i => i.u !== u); renderCart(); document.getElementById('count').innerText = cart.length; }
+    function removeFromCart(u) {
+        cart = cart.filter(i => i.u !== u);
+        delSound.play(); // تشغيل صوت الحذف
+        renderCart();
+        document.getElementById('count').innerText = cart.length;
+        tg.HapticFeedback.notificationOccurred('warning');
+    }
 
     function updatePayInfo() {
         const val = document.getElementById('pay-sel').value;
@@ -160,52 +165,39 @@
         navigator.clipboard.writeText(document.getElementById('pay-details').innerText);
         tg.showAlert("Copied");
     }
-async function sendOrder() {
-    const f = document.getElementById('receipt').files[0];
-    if(!f) return tg.showAlert("Select file");
-    
-    // تغيير نص الزر حتى يعرف الزبون أن الإرسال جاري
-    const btn = event.currentTarget;
-    const originalText = btn.innerText;
-    btn.disabled = true;
-    btn.innerText = "SENDING...";
 
-    const reader = new FileReader(); 
-    reader.readAsDataURL(f);
-    reader.onload = async () => {
-        try {
-            const r = await fetch(`${API}/submit_order`, {
-                method:'POST', 
-                headers:{'Content-Type':'application/json'},
-                body:JSON.stringify({
-                    user_id:tg.initDataUnsafe.user.id, 
-                    user_name:tg.initDataUnsafe.user.username || "User",
-                    items:cart, 
-                    method:document.getElementById('pay-sel').value,
-                    image:reader.result, 
-                    total:document.getElementById('total-price').innerText
-                })
-            });
+    async function sendOrder() {
+        const f = document.getElementById('receipt').files[0];
+        if(!f) return tg.showAlert("Please select a receipt file");
+        
+        const btn = document.getElementById('send-btn');
+        btn.disabled = true;
+        btn.innerText = "SENDING...";
 
-            if(r.ok) {
-                // الرسالة التي تظهر للزبون بعد الضغط على Send
-                tg.showAlert("Your order has been sent successfully! Please wait for admin approval.", () => {
-                    tg.close(); // ينغلق التطبيق بعد ما يضغط الزبون OK على الرسالة
+        const reader = new FileReader(); 
+        reader.readAsDataURL(f);
+        reader.onload = async () => {
+            try {
+                const r = await fetch(`${API}/submit_order`, {
+                    method:'POST', headers:{'Content-Type':'application/json'},
+                    body:JSON.stringify({
+                        user_id:tg.initDataUnsafe.user.id, user_name:tg.initDataUnsafe.user.username || "User",
+                        items:cart, method:document.getElementById('pay-sel').value,
+                        image:reader.result, total:document.getElementById('total-price').innerText
+                    })
                 });
-            } else {
-                tg.showAlert("Error sending order. Please try again.");
-                btn.disabled = false;
-                btn.innerText = originalText;
+                if(r.ok) {
+                    tg.showAlert("Sent successfully! Please wait for approval.", () => {
+                        tg.close(); // ينغلق فقط عندما يضغط المستخدم على OK
+                    });
+                } else {
+                    tg.showAlert("Error. Try again.");
+                    btn.disabled = false; btn.innerText = "SEND ORDER";
+                }
+            } catch(e) {
+                tg.showAlert("Connection Error");
+                btn.disabled = false; btn.innerText = "SEND ORDER";
             }
-        } catch(e) {
-            tg.showAlert("Connection error!");
-            btn.disabled = false;
-            btn.innerText = originalText;
-        }
-    }
-}
-
-            tg.close();
         }
     }
 
@@ -219,7 +211,7 @@ async function sendOrder() {
     }
     async function addAccs() {
         await fetch(`${API}/admin/add`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:ADMIN_ID, data:document.getElementById('admin-in').value, cat:document.getElementById('admin-cat').value})});
-        document.getElementById('admin-in').value=""; load();
+        document.getElementById('admin-in').value=""; load(); tg.showAlert("Added");
     }
     async function addPay() {
         const m = document.getElementById('p-name').value + '|' + document.getElementById('p-val').value;
