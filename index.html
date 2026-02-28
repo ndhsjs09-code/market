@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Store</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background-color: white; color: black; direction: ltr; }
+        .container { display: flex; flex-direction: column; gap: 10px; }
+        .item-card { border: 1px solid #ccc; padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .item-info { display: flex; flex-direction: column; }
+        .price { color: green; font-weight: bold; }
+        .buy-button { background-color: #0088cc; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2 style="text-align: center;">Available Accounts</h2>
+    <div id="items-container" class="container">
+        <p style="text-align: center;">Loading accounts...</p>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        // Your specific ngrok URL from the image
+        const SERVER_URL = "https://laquita-unperturbed-altagracia.ngrok-free.dev";
+
+        async function loadItems() {
+            try {
+                const response = await fetch(`${SERVER_URL}/get_data`);
+                const data = await response.json();
+                const container = document.getElementById('items-container');
+                container.innerHTML = '';
+
+                if (data.length === 0) {
+                    container.innerHTML = '<p style="text-align: center;">No accounts available right now.</p>';
+                    return;
+                }
+
+                data.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'item-card';
+                    card.innerHTML = `
+                        <div class="item-info">
+                            <span><strong>@${item.u}</strong></span>
+                            <span class="price">${item.p}$</span>
+                        </div>
+                        <button class="buy-button" onclick="selectItem('${item.u}')">Buy Now</button>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (error) {
+                document.getElementById('items-container').innerHTML = '<p style="text-align: center; color: red;">Error connecting to server. Make sure RDP and ngrok are running.</p>';
+            }
+        }
+
+        function selectItem(username) {
+            tg.sendData(username);
+        }
+
+        loadItems();
+    </script>
+</body>
+</html>
