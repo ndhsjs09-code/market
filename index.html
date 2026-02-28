@@ -3,55 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tik Market</title>
+    <title>Tik Market Pro</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: sans-serif; padding: 20px; background-color: white; color: black; }
-        .card { border: 1px solid #ccc; padding: 15px; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
-        .price { color: green; font-weight: bold; }
-        .btn { background-color: #0088cc; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+        :root { --main: #0088cc; --bg: #f4f4f9; }
+        body { font-family: sans-serif; margin: 0; padding-bottom: 80px; background: var(--bg); }
+        .header { background: var(--main); color: white; padding: 15px; text-align: center; }
+        .container { padding: 15px; }
+        .card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .btn { background: var(--main); color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; cursor: pointer; margin-top: 5px; }
+        .navbar { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #ddd; }
+        .nav-item { cursor: pointer; color: #666; font-size: 14px; }
+        .active { color: var(--main); font-weight: bold; }
+        .tab { display: none; }
+        .tab.active { display: block; }
+        input, select { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
     </style>
 </head>
 <body>
-    <h2 style="text-align: center;">Tik Market</h2>
-    <h3 style="text-align: center;">Available Accounts</h3>
-    <div id="list">Loading accounts...</div>
+<div class="header"><h2 id="title">Tik Market</h2></div>
+<div class="container">
+    <div id="store-tab" class="tab active">
+        <div id="items-list">Loading...</div>
+    </div>
+    <div id="cart-tab" class="tab">
+        <div id="cart-items">Your cart is empty</div>
+        <div id="checkout-form" style="display:none; margin-top:20px;">
+            <h4>Payment Method:</h4>
+            <select id="pay-method"></select>
+            <h4>Upload Receipt (Image):</h4>
+            <input type="file" id="receipt-file" accept="image/*">
+            <button class="btn" onclick="submitOrder()">Submit Order</button>
+        </div>
+    </div>
+    <div id="admin-tab" class="tab">
+        <h4>Add Account</h4>
+        <input type="text" id="new-acc" placeholder="user:pass:price">
+        <button class="btn" onclick="addAcc()">Add to Inventory</button>
+        <hr>
+        <h4>Payment Methods</h4>
+        <input type="text" id="new-method" placeholder="Method Name">
+        <button class="btn" onclick="addPay()">Add Method</button>
+    </div>
+</div>
+<nav class="navbar">
+    <div class="nav-item active" onclick="showTab('store-tab', 'Tik Market')">Store</div>
+    <div class="nav-item" onclick="showTab('cart-tab', 'Cart')">Cart (<span id="count">0</span>)</div>
+    <div id="admin-btn" class="nav-item" style="display:none;" onclick="showTab('admin-tab', 'Admin')">Admin</div>
+</nav>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
+<script>
+    const tg = window.Telegram.WebApp;
+    const API = "https://laquita-unperturbed-altagracia.ngrok-free.dev";
+    let cart = [];
+
+    function showTab(id, t) {
+        document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.getElementById('title').innerText = t;
+        event.currentTarget.classList.add('active');
+    }
+
+    async function load() {
+        const r = await fetch(`${API}/get_all`, {headers:{"ngrok-skip-browser-warning":"true"}});
+        const d = await r.json();
+        if(tg.initDataUnsafe.user.id == 5939498558) document.getElementById('admin-btn').style.display='block';
         
-        // رابط الـ ngrok مالتك من الصورة
-        const URL = "https://laquita-unperturbed-altagracia.ngrok-free.dev";
+        document.getElementById('items-list').innerHTML = d.items.map(i => `
+            <div class="card">
+                <div><strong>@${i.u}</strong><br>${i.p}$</div>
+                <button onclick="addToCart('${i.u}','${i.p}')" style="background:#0088cc;color:white;border:none;padding:5px 10px;border-radius:5px;">Add</button>
+            </div>`).join('');
+        
+        document.getElementById('pay-method').innerHTML = d.payments.map(p => `<option value="${p}">${p}</option>`).join('');
+    }
 
-        async function loadData() {
-            try {
-                const res = await fetch(`${URL}/get_data`, {
-                    headers: {
-                        "ngrok-skip-browser-warning": "true" // هذا السطر يحل مشكلة التحذير
-                    }
-                });
-                const data = await res.json();
-                const container = document.getElementById('list');
-                container.innerHTML = '';
-                
-                if (data.length === 0) {
-                    container.innerHTML = '<p style="text-align: center;">No accounts available.</p>';
-                    return;
-                }
+    function addToCart(u, p) {
+        cart.push({u, p});
+        document.getElementById('count').innerText = cart.length;
+        document.getElementById('cart-items').innerHTML = cart.map(i => `<div class="card">@${i.u} - ${i.p}$</div>`).join('');
+        document.getElementById('checkout-form').style.display = 'block';
+    }
 
-                data.forEach(item => {
-                    container.innerHTML += `
-                        <div class="card">
-                            <div><strong>@${item.u}</strong><br><span class="price">${item.p}$</span></div>
-                            <button class="btn" onclick="tg.sendData('${item.u}')">Buy Now</button>
-                        </div>`;
-                });
-            } catch (e) {
-                document.getElementById('list').innerHTML = "<p style='color:red; text-align:center;'>Connection Error. Please check RDP.</p>";
-            }
-        }
-        loadData();
-    </script>
+    async function submitOrder() {
+        const file = document.getElementById('receipt-file').files[0];
+        if(!file) return alert("Please upload Transaction screen");
+        
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async () => {
+            await fetch(`${API}/submit_order`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    user_id: tg.initDataUnsafe.user.id,
+                    user_name: tg.initDataUnsafe.user.username || "Unknown",
+                    items: cart,
+                    method: document.getElementById('pay-method').value,
+                    image: reader.result,
+                    total: cart.reduce((s, i) => s + parseFloat(i.p), 0)
+                })
+            });
+            tg.close();
+        };
+    }
+
+    async function addAcc() {
+        const val = document.getElementById('new-acc').value;
+        await fetch(`${API}/admin/add`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({data: val, user_id: tg.initDataUnsafe.user.id})
+        });
+        location.reload();
+    }
+
+    async function addPay() {
+        const val = document.getElementById('new-method').value;
+        await fetch(`${API}/admin/add_pay`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({method: val, user_id: tg.initDataUnsafe.user.id})
+        });
+        location.reload();
+    }
+
+    tg.expand();
+    load();
+</script>
 </body>
 </html>
