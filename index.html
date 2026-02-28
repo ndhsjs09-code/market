@@ -58,7 +58,7 @@
 
     <div id="admin-tab" class="tab">
         <h3>Admin Panel</h3>
-        <textarea id="mass-in" placeholder="Mass/Single: user:pass:price" style="height:100px"></textarea>
+        <textarea id="mass-in" placeholder="Format: user:pass:price" style="height:100px"></textarea>
         <select id="sel-cat">
             <option value="Auto">Auto Detect Category</option>
             <option value="3C/L">3C/L</option>
@@ -67,10 +67,10 @@
             <option value="4C/L">4C/L</option>
             <option value="Double/Triple">Double/Triple</option>
         </select>
-        <button class="btn" onclick="addAny()">Add to Selected Category</button>
+        <button class="btn" onclick="addAny()">Add Accounts</button>
         <hr style="border:0; border-top:1px solid #333; margin:20px 0">
         <h3>Payments</h3>
-        <input id="p-name" placeholder="Method (e.g. ZainCash)">
+        <input id="p-name" placeholder="Method Name">
         <input id="p-val" placeholder="Wallet Details">
         <button class="btn" onclick="savePay()">Save Payment</button>
         <hr style="border:0; border-top:1px solid #333; margin:20px 0">
@@ -100,12 +100,14 @@
     }
 
     async function load() {
-        const r = await fetch(`${API}/get_all`, {headers:{"ngrok-skip-browser-warning":"true"}});
-        const d = await r.json();
-        allItems = d.items; paysData = d.payments;
-        document.getElementById('admin-items').innerHTML = d.items.map(i => `<div class="card"><span>[${i.c}] @${i.u}</span><button class="btn-red" onclick="delAcc('${i.u}')">DEL</button></div>`).join('');
-        document.getElementById('admin-pays').innerHTML = d.payments.map(p => `<div class="card"><span>${p.split('|')[0]}</span><button class="btn-red" onclick="delPay('${p}')">DEL</button></div>`).join('');
-        document.getElementById('pay-sel').innerHTML = '<option disabled selected>Select Payment</option>' + d.payments.map(p => `<option value="${p.split('|')[0]}">${p.split('|')[0]}</option>`).join('');
+        try {
+            const r = await fetch(`${API}/get_all`, {headers:{"ngrok-skip-browser-warning":"true"}});
+            const d = await r.json();
+            allItems = d.items; paysData = d.payments;
+            document.getElementById('admin-items').innerHTML = d.items.map(i => `<div class="card"><span>[${i.c}] @${i.u}</span><button class="btn-red" onclick="delAcc('${i.u}')">DEL</button></div>`).join('');
+            document.getElementById('admin-pays').innerHTML = d.payments.map(p => `<div class="card"><span>${p.split('|')[0]}</span><button class="btn-red" onclick="delPay('${p}')">DEL</button></div>`).join('');
+            document.getElementById('pay-sel').innerHTML = '<option disabled selected>Select Payment</option>' + d.payments.map(p => `<option value="${p.split('|')[0]}">${p.split('|')[0]}</option>`).join('');
+        } catch(e) {}
     }
 
     function filter(c) {
@@ -125,33 +127,23 @@
     }
 
     function addToCart(u, p) {
-        cart.push({u, p});
-        updateCartUI();
+        cart.push({u, p}); updateCartUI();
         tg.HapticFeedback.impactOccurred('medium');
     }
 
     function removeFromCart(index) {
-        cart.splice(index, 1);
-        updateCartUI();
+        cart.splice(index, 1); updateCartUI();
     }
 
     function updateCartUI() {
         document.getElementById('count').innerText = cart.length;
         const list = document.getElementById('cart-list');
         const checkout = document.getElementById('checkout');
-        
         if(cart.length === 0) {
-            list.innerHTML = 'Empty';
-            list.style.textAlign = 'center';
-            checkout.style.display = 'none';
+            list.innerHTML = 'Empty'; list.style.textAlign = 'center'; checkout.style.display = 'none';
         } else {
             list.style.textAlign = 'left';
-            list.innerHTML = cart.map((i, idx) => `
-                <div class="cart-item">
-                    <span>@${i.u} - $${i.p}</span>
-                    <button class="btn-red" style="padding: 5px 10px;" onclick="removeFromCart(${idx})">X</button>
-                </div>
-            `).join('');
+            list.innerHTML = cart.map((i, idx) => `<div class="cart-item"><span>@${i.u} - $${i.p}</span><button class="btn-red" onclick="removeFromCart(${idx})">X</button></div>`).join('');
             checkout.style.display = 'block';
             const total = cart.reduce((s, i) => s + parseFloat(i.p), 0);
             document.getElementById('total-price').innerText = `Total: $${total.toFixed(2)}`;
@@ -191,11 +183,10 @@
         if(!f) return alert("Upload receipt");
         const r = new FileReader(); r.readAsDataURL(f);
         r.onload = async () => {
-            await fetch(`${API}/submit_order`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:tg.initDataUnsafe.user.id, user_name:tg.initDataUnsafe.user.username||"User", items:cart, method:document.getElementById('pay-sel').value, image:r.result, total:cart.reduce((s,i)=>s+parseFloat(i.p),0)})});
+            await fetch(`${API}/submit_order`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:tg.initDataUnsafe.user.id, user_name:tg.initDataUnsafe.user.username||"User", items:cart, method:document.getElementById('pay-sel').value, image:r.result, total:cart.reduce((s, i) => s + parseFloat(i.p), 0)})});
             tg.close();
         };
     }
-
     tg.expand(); load();
 </script>
 </body>
