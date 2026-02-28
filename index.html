@@ -7,21 +7,21 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { --main: #ffb6c1; --accent: #ff85a1; --bg: #0a0a0a; --card: #141414; }
-        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; padding-bottom: 90px; overflow-x: hidden; }
-        .tab { display: none; animation: fadeIn 0.3s; } .active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .header-title { text-align: center; color: var(--main); font-weight: 900; letter-spacing: 2px; margin-bottom: 20px; font-size: 24px; text-transform: uppercase; }
-        .card { background: var(--card); border: 1px solid #1f1f1f; padding: 18px; border-radius: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.6); }
-        .btn { background: var(--main); color: #000; border: none; padding: 14px; border-radius: 12px; cursor: pointer; width: 100%; font-weight: 800; text-transform: uppercase; transition: 0.3s; }
-        .btn:active { transform: scale(0.95); background: var(--accent); }
-        .btn-del { background: #ff4d6d; color: #fff; padding: 8px 12px; width: auto; font-size: 11px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; }
-        .nav { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(15,15,15,0.9); backdrop-filter: blur(15px); display: flex; justify-content: space-around; padding: 18px 0; border-top: 1px solid #222; z-index: 1000; }
-        .nav-item { color: #555; cursor: pointer; font-size: 13px; font-weight: bold; } .nav-item.active-nav { color: var(--main); text-shadow: 0 0 10px var(--main); }
-        input, textarea, select { width: 100%; padding: 14px; margin: 10px 0; background: #111; color: #fff; border: 1px solid #222; border-radius: 10px; outline: none; }
-        .cat-card { background: linear-gradient(145deg, #141414, #0f0f0f); padding: 30px; border-radius: 20px; margin-bottom: 15px; text-align: center; border: 1px solid #222; cursor: pointer; font-size: 20px; font-weight: 900; color: var(--main); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; padding-bottom: 100px; overflow-x: hidden; width: 100%; }
+        .tab { display: none; width: 100%; } .active { display: block; }
+        .header-title { text-align: center; color: var(--main); font-weight: 900; margin-bottom: 25px; font-size: 22px; text-transform: uppercase; }
+        .card { background: var(--card); border: 1px solid #1f1f1f; padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .btn { background: var(--main); color: #000; border: none; padding: 12px; border-radius: 10px; cursor: pointer; width: 100%; font-weight: 800; text-transform: uppercase; font-size: 14px; display: block; }
+        .btn:active { background: var(--accent); opacity: 0.9; }
+        .btn-small { background: var(--main); color: #000; padding: 8px 15px; width: auto; border-radius: 8px; font-size: 12px; border: none; font-weight: bold; }
+        .btn-del { background: #ff4d6d; color: #fff; padding: 8px 12px; width: auto; font-size: 11px; border-radius: 8px; border: none; font-weight: bold; }
+        .nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #0f0f0f; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #222; z-index: 1000; }
+        .nav-item { color: #555; cursor: pointer; font-size: 12px; font-weight: bold; text-align: center; } .nav-item.active-nav { color: var(--main); }
+        input, textarea, select { width: 100%; padding: 12px; margin: 8px 0; background: #111; color: #fff; border: 1px solid #222; border-radius: 8px; outline: none; font-size: 14px; }
+        .cat-card { background: var(--card); padding: 25px; border-radius: 15px; margin-bottom: 12px; text-align: center; border: 1px solid #222; font-size: 18px; font-weight: 800; color: var(--main); width: 100%; }
         .copy-wrapper { display: flex; justify-content: space-between; align-items: center; width: 100%; }
-        .copy-inner-btn { background: var(--main); color: #000; border: none; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; }
-        .empty-msg { text-align: center; color: #666; font-weight: bold; margin-top: 50px; font-size: 18px; text-transform: uppercase; letter-spacing: 1px; }
+        .empty-msg { text-align: center; color: #444; padding: 40px 0; font-weight: bold; font-size: 16px; }
     </style>
 </head>
 <body>
@@ -37,24 +37,24 @@
         <div class="cat-card" onclick="showCat('Others')">Others</div>
     </div>
     <div id="items-view" style="display:none">
-        <button class="btn" onclick="backToCats()" style="margin-bottom:20px; width: auto; background: #1a1a1a; color: var(--main);">BACK</button>
+        <button class="btn" onclick="backToCats()" style="margin-bottom:15px; width: 100px; padding: 8px;">BACK</button>
         <div id="items-list"></div>
     </div>
 </div>
 
 <div id="cart-tab" class="tab">
-    <h3>CART</h3>
+    <div class="header-title">CART</div>
     <div id="cart-list"></div>
-    <div id="pay-area" style="display:none">
+    <div id="pay-area" style="display:none; margin-top: 20px;">
         <select id="pay-sel" onchange="updatePayInfo()"></select>
-        <div id="pay-info" style="padding:15px; border-radius:12px; border:1px dashed var(--main); margin:20px 0; background: #0c0c0c; color: var(--main); font-weight: 500; display: none;"></div>
+        <div id="pay-info" style="padding:15px; border-radius:10px; border:1px dashed var(--main); margin:15px 0; background: #0c0c0c; color: var(--main); display: none;"></div>
         <input type="file" id="receipt" accept="image/*">
         <button class="btn" id="send-btn" onclick="sendOrder()">CONFIRM AND SEND</button>
     </div>
 </div>
 
 <div id="admin-tab" class="tab">
-    <h3>ADMIN PANEL</h3>
+    <div class="header-title">ADMIN PANEL</div>
     <select id="admin-cat">
         <option value="Auto">Auto Detect</option>
         <option value="3C/L">3C/L</option>
@@ -63,15 +63,15 @@
         <option value="4C/L">4C/L</option>
         <option value="Double/Triple">Double/Triple</option>
     </select>
-    <textarea id="admin-in" style="height:120px" placeholder="user:pass:price"></textarea>
+    <textarea id="admin-in" style="height:100px" placeholder="user:pass:price"></textarea>
     <button class="btn" onclick="addAccs()">ADD ACCOUNTS</button>
-    <h3>MANAGE STOCK</h3>
-    <div id="admin-items-list"></div>
-    <h3>PAYMENT METHODS</h3>
-    <input type="text" id="p-name" placeholder="Method Name">
-    <input type="text" id="p-val" placeholder="Wallet Details">
-    <button class="btn" onclick="addP()">SAVE METHOD</button>
-    <div id="admin-pays" style="margin-top:20px"></div>
+    <div id="admin-items-list" style="margin-top: 20px;"></div>
+    <div style="border-top: 1px solid #222; margin: 20px 0; padding-top: 20px;">
+        <input type="text" id="p-name" placeholder="Method Name">
+        <input type="text" id="p-val" placeholder="Wallet Details">
+        <button class="btn" onclick="addP()">SAVE METHOD</button>
+    </div>
+    <div id="admin-pays"></div>
 </div>
 
 <nav class="nav">
@@ -104,8 +104,8 @@
             const d = await r.json();
             allI = d.items; allP = d.payments;
             document.getElementById('pay-sel').innerHTML = '<option disabled selected>CHOOSE PAYMENT</option>' + allP.map(p=>`<option value="${p.split('|')[0]}">${p.split('|')[0]}</option>`).join('');
-            document.getElementById('admin-pays').innerHTML = allP.map(p=>`<div class="card"><span>${p.split('|')[0]}</span><button class="btn btn-del" onclick="delP('${p}')">DEL</button></div>`).join('');
-        } catch(e) { console.error(e); }
+            document.getElementById('admin-pays').innerHTML = allP.map(p=>`<div class="card"><span>${p.split('|')[0]}</span><button class="btn-del" onclick="delP('${p}')">DEL</button></div>`).join('');
+        } catch(e) {}
     }
 
     function showCat(c) {
@@ -113,11 +113,10 @@
         document.getElementById('items-view').style.display='block';
         const filtered = allI.filter(i => i.c == c);
         const list = document.getElementById('items-list');
-        
         if (filtered.length === 0) {
             list.innerHTML = `<div class="empty-msg">SOLD OUT</div>`;
         } else {
-            list.innerHTML = filtered.map(i => `<div class="card"><div><b style="color:var(--main); font-size:16px;">@${i.u}</b><br><small style="color:#666">$${i.p}</small></div><button class="btn" style="width:auto" onclick="addToCart('${i.u}','${i.p}')">ADD</button></div>`).join('');
+            list.innerHTML = filtered.map(i => `<div class="card"><div><b>@${i.u}</b><br><small style="color:var(--main)">$${i.p}</small></div><button class="btn-small" onclick="addToCart('${i.u}','${i.p}')">ADD</button></div>`).join('');
         }
     }
 
@@ -126,20 +125,15 @@
     function addToCart(u,p) { 
         if(cart.find(x => x.u === u)) return;
         cart.push({u,p}); 
-        updateCartCount();
+        document.getElementById('count').innerText = cart.length;
         renderCart(); 
         tg.HapticFeedback.notificationOccurred('success'); 
     }
 
     function removeFromCart(u) {
         cart = cart.filter(i => i.u !== u);
-        updateCartCount();
-        renderCart();
-        tg.HapticFeedback.impactOccurred('medium');
-    }
-
-    function updateCartCount() {
         document.getElementById('count').innerText = cart.length;
+        renderCart();
     }
     
     function renderCart() {
@@ -148,12 +142,7 @@
             c.innerHTML="<p style='color:#444; text-align:center;'>CART IS EMPTY</p>"; 
             document.getElementById('pay-area').style.display='none'; 
         } else { 
-            c.innerHTML=cart.map(i=>`
-                <div class="card">
-                    <div>@${i.u}<br><span style="color:var(--main)">$${i.p}</span></div>
-                    <button class="btn-del" onclick="removeFromCart('${i.u}')">REMOVE</button>
-                </div>
-            `).join(''); 
+            c.innerHTML=cart.map(i=>`<div class="card"><div>@${i.u}<br><small>$${i.p}</small></div><button class="btn-del" onclick="removeFromCart('${i.u}')">REMOVE</button></div>`).join(''); 
             document.getElementById('pay-area').style.display='block'; 
         }
     }
@@ -164,7 +153,7 @@
         const infoDiv = document.getElementById('pay-info');
         if(p) { 
             const val = p.split('|')[1];
-            infoDiv.innerHTML = `<div class="copy-wrapper"><span>${val}</span><button class="copy-inner-btn" onclick="copyData('${val}')">COPY</button></div>`;
+            infoDiv.innerHTML = `<div class="copy-wrapper"><span>${val}</span><button class="btn-small" style="padding:4px 10px" onclick="copyData('${val}')">COPY</button></div>`;
             infoDiv.style.display='block'; 
         }
     }
@@ -172,14 +161,14 @@
     function copyData(text) {
         navigator.clipboard.writeText(text).then(() => {
             const btn = event.target;
-            btn.innerText = "COPIED";
+            btn.innerText = "DONE";
             setTimeout(() => { btn.innerText = "COPY"; }, 1500);
             tg.HapticFeedback.impactOccurred('light');
         });
     }
 
     function renderAdminItems() {
-        document.getElementById('admin-items-list').innerHTML = allI.map(i => `<div class="card" style="padding:10px; font-size:13px"><span>@${i.u}</span><button class="btn btn-del" onclick="delUser('${i.u}')">REMOVE</button></div>`).join('');
+        document.getElementById('admin-items-list').innerHTML = allI.map(i => `<div class="card"><span>@${i.u}</span><button class="btn-del" onclick="delUser('${i.u}')">REMOVE</button></div>`).join('');
     }
 
     async function delUser(u) {
@@ -190,6 +179,7 @@
     async function addAccs() {
         const d = document.getElementById('admin-in').value;
         const c = document.getElementById('admin-cat').value;
+        if(!d) return;
         await fetch(`${API}/admin/add`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:tg.initDataUnsafe.user.id, data:d, cat:c})});
         document.getElementById('admin-in').value = ""; load();
     }
@@ -197,8 +187,9 @@
     async function addP() {
         const n = document.getElementById('p-name').value;
         const v = document.getElementById('p-val').value;
+        if(!n || !v) return;
         await fetch(`${API}/admin/add_pay`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:tg.initDataUnsafe.user.id, method:n+'|'+v})});
-        load();
+        document.getElementById('p-name').value = ""; document.getElementById('p-val').value = ""; load();
     }
 
     async function delP(m) {
@@ -208,7 +199,7 @@
 
     async function sendOrder() {
         const f = document.getElementById('receipt').files[0];
-        if(!f) return alert("Upload receipt first");
+        if(!f) return alert("Select receipt");
         const btn = document.getElementById('send-btn');
         btn.disabled=true; btn.innerText="SENDING";
         const reader = new FileReader();
