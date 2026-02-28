@@ -28,13 +28,18 @@
 
         async function fetchItems() {
             try {
-                const response = await fetch(`${API_URL}/get_data`);
+                // إضافة Headers لتجاوز صفحة تحذير ngrok
+                const response = await fetch(`${API_URL}/get_data`, {
+                    headers: {
+                        "ngrok-skip-browser-warning": "true"
+                    }
+                });
                 const data = await response.json();
                 const list = document.getElementById('items-list');
                 list.innerHTML = '';
 
                 if (data.length === 0) {
-                    list.innerHTML = '<p style="text-align: center;">No accounts available at the moment</p>';
+                    list.innerHTML = '<p style="text-align: center;">No accounts available</p>';
                     return;
                 }
 
@@ -46,7 +51,7 @@
                         </div>`;
                 });
             } catch (error) {
-                document.getElementById('items-list').innerHTML = '<p style="text-align: center; color: red;">Connection error</p>';
+                document.getElementById('items-list').innerHTML = '<p style="text-align: center; color: red;">Connection error. Check RDP server.</p>';
             }
         }
 
