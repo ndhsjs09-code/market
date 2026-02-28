@@ -3,203 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tik Market Pro</title>
+    <title>Tik Market</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --main: #ff2d75; --bg: #000000; --card-bg: #1a1a1a; --text: #ffffff; }
-        html, body { 
-            margin: 0; padding: 0; width: 100%; overflow-x: hidden; 
-            background: var(--bg); color: var(--text); font-family: sans-serif;
-            -webkit-text-size-adjust: 100%;
-        }
-        body { padding-bottom: 90px; direction: ltr; }
-        .header { background: var(--bg); color: var(--main); padding: 20px; text-align: center; border-bottom: 2px solid var(--main); position: relative; }
-        .back-btn { position: absolute; left: 15px; top: 22px; color: var(--main); border: 1px solid var(--main); padding: 5px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; display: none; }
-        .container { padding: 20px; box-sizing: border-box; }
-        .cat-btn { background: var(--card-bg); border: 2px solid var(--main); color: white; padding: 25px; margin-bottom: 15px; border-radius: 15px; text-align: center; font-size: 18px; font-weight: bold; cursor: pointer; display: block; }
-        .card { background: var(--card-bg); padding: 20px; border-radius: 15px; margin-bottom: 15px; border: 1.5px solid var(--main); display: flex; justify-content: space-between; align-items: center; }
-        .btn { background: var(--main); color: white; border: none; padding: 15px; border-radius: 12px; width: 100%; cursor: pointer; font-weight: bold; font-size: 16px; }
-        .btn-red { background: #ff0000; color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 12px; }
-        .navbar { position: fixed; bottom: 0; width: 100%; background: #111; display: flex; justify-content: space-around; padding: 15px 0; border-top: 2px solid var(--main); z-index: 1000; }
-        .nav-item { cursor: pointer; color: #888; font-size: 16px; font-weight: bold; }
-        .nav-item.active { color: var(--main); }
-        .tab { display: none; }
-        .tab.active { display: block; }
-        textarea, input, select { 
-            width: 100%; padding: 15px; margin: 10px 0; 
-            border: 1.5px solid #444; border-radius: 12px; 
-            background: #222; color: white; 
-            font-size: 16px !important; 
-            box-sizing: border-box; outline: none;
-        }
+        :root { --main: #ff2d75; --bg: #000000; --card: #1a1a1a; }
+        html, body { margin:0; padding:0; background:var(--bg); color:white; font-family:sans-serif; overflow-x:hidden; -webkit-text-size-adjust:100%; }
+        .header { padding:20px; text-align:center; border-bottom:2px solid var(--main); }
+        .container { padding:20px; padding-bottom:100px; }
+        .tab { display:none; } .active { display:block; }
+        .card { background:var(--card); padding:15px; border-radius:12px; border:1px solid var(--main); margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; }
+        .btn { background:var(--main); color:white; border:none; padding:12px; border-radius:10px; width:100%; font-weight:bold; cursor:pointer; }
+        textarea, input { width:100%; padding:15px; margin:10px 0; border-radius:10px; border:1px solid #444; background:#222; color:white; font-size:16px !important; box-sizing:border-box; }
+        .navbar { position:fixed; bottom:0; width:100%; background:#111; display:flex; justify-content:space-around; padding:15px 0; border-top:2px solid var(--main); }
+        .nav-item { color:#888; cursor:pointer; font-weight:bold; }
+        .nav-item.active-nav { color:var(--main); }
     </style>
 </head>
 <body>
-<div class="header">
-    <div id="back-action" class="back-btn" onclick="showCategories()">Back</div>
-    <h2 id="title">TIK MARKET</h2>
-</div>
+
+<div class="header"><h2>TIK MARKET</h2></div>
+
 <div class="container">
     <div id="store-tab" class="tab active">
-        <div id="categories-list">
-            <div class="cat-btn" onclick="filterItems('3C/L')">3C/L</div>
-            <div class="cat-btn" onclick="filterItems('4CC/LL')">4CC/LL</div>
-            <div class="cat-btn" onclick="filterItems('4C/L Same')">4C/L Same</div>
-            <div class="cat-btn" onclick="filterItems('4C/L')">4C/L</div>
-            <div class="cat-btn" onclick="filterItems('Double/Triple')">Double/Triple</div>
+        <div id="cats">
+            <button class="btn" style="margin-bottom:10px" onclick="filter('3C/L')">3C/L</button>
+            <button class="btn" style="margin-bottom:10px" onclick="filter('4CC/LL')">4CC/LL</button>
+            <button class="btn" style="margin-bottom:10px" onclick="filter('4C/L')">4C/L</button>
+            <button class="btn" style="margin-bottom:10px" onclick="filter('Double/Triple')">Double/Triple</button>
         </div>
-        <div id="filtered-items" style="display:none;"></div>
-    </div>
-    
-    <div id="cart-tab" class="tab">
-        <h4 style="color:var(--main)">Your Cart</h4>
-        <div id="cart-items" style="text-align:center;color:#666">Your cart is empty</div>
-        <div id="checkout-form" style="display:none; margin-top:20px;">
-            <select id="pay-method" onchange="updatePayDetails()"></select>
-            <div id="method-details" style="display:none; background:#1a1a1a; padding:15px; border:1px solid var(--main); border-radius:12px; margin:10px 0;">
-                <div id="display-title" style="color:var(--main); font-size:12px; font-weight:bold;"></div>
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
-                    <span id="display-content"></span>
-                    <button class="btn" style="width:auto; padding:5px 12px; font-size:12px;" id="copy-action">COPY</button>
-                </div>
-            </div>
-            <input type="file" id="receipt-file" accept="image/*">
-            <button class="btn" onclick="submitOrder()">SUBMIT ORDER</button>
-        </div>
+        <div id="items-list"></div>
     </div>
 
     <div id="admin-tab" class="tab">
-        <h4>Mass Import List</h4>
-        <textarea id="mass-import-input" placeholder="Paste: user|pass|price OR user:pass:price" style="height:150px;"></textarea>
-        <button class="btn" onclick="massImport()">IMPORT ALL</button>
-        <div id="admin-items-list" style="margin-top:20px;"></div>
-        <hr style="border:0; border-top:1px solid #333; margin:20px 0;">
-        <h4>Payments</h4>
-        <input type="text" id="pay-name" placeholder="Title">
-        <input type="text" id="pay-val" placeholder="Details">
-        <button class="btn" onclick="addPay()">SAVE PAYMENT</button>
-        <div id="admin-pay-list" style="margin-top:20px;"></div>
+        <h3>Admin Panel</h3>
+        <textarea id="mass-input" placeholder="user|pass|price" style="height:150px"></textarea>
+        <button class="btn" onclick="sendMass()">IMPORT ALL DATA</button>
+        <div id="admin-list" style="margin-top:20px"></div>
     </div>
 </div>
 
-<nav class="navbar">
-    <div class="nav-item active" onclick="showTab('store-tab')">MAIN</div>
-    <div class="nav-item" onclick="showTab('cart-tab')">CART (<span id="count">0</span>)</div>
-    <div id="admin-btn" class="nav-item" style="display:none;" onclick="showTab('admin-tab')">ADMIN</div>
-</nav>
+<div class="navbar">
+    <div class="nav-item active-nav" onclick="tab('store-tab')">STORE</div>
+    <div id="admin-btn" class="nav-item" style="display:none" onclick="tab('admin-tab')">ADMIN</div>
+</div>
 
 <script>
     const tg = window.Telegram.WebApp;
     const API = "https://laquita-unperturbed-altagracia.ngrok-free.dev";
-    let cart = [], allItems = [], paymentData = [];
+    let allData = [];
 
     if(tg.initDataUnsafe.user && tg.initDataUnsafe.user.id == 5939498558) {
         document.getElementById('admin-btn').style.display = 'block';
     }
 
-    function showTab(id) {
-        document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+    function tab(id) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active-nav'));
         document.getElementById(id).classList.add('active');
-        event.currentTarget.classList.add('active');
+        event.currentTarget.classList.add('active-nav');
     }
 
     async function load() {
-        try {
-            const r = await fetch(`${API}/get_all`, {headers:{"ngrok-skip-browser-warning":"true"}});
-            const d = await r.json();
-            allItems = d.items; paymentData = d.payments;
-            document.getElementById('admin-items-list').innerHTML = d.items.map(i => `<div class="card" style="padding:10px"><span>[${i.c}] @${i.u}</span><button class="btn-red" onclick="deleteAcc('${i.u}')">DEL</button></div>`).join('');
-            document.getElementById('pay-method').innerHTML = '<option disabled selected>Select Payment...</option>' + d.payments.map(p => `<option value="${p.split('|')[0]}">${p.split('|')[0]}</option>`).join('');
-            document.getElementById('admin-pay-list').innerHTML = d.payments.map(p => `<div class="card" style="padding:10px"><span>${p.split('|')[0]}</span><button class="btn-red" onclick="deletePay('${p}')">DEL</button></div>`).join('');
-        } catch(e) {}
+        const r = await fetch(`${API}/get_all`, {headers:{"ngrok-skip-browser-warning":"true"}});
+        const d = await r.json();
+        allData = d.items;
+        document.getElementById('admin-list').innerHTML = d.items.map(i => `<div class="card"><span>@${i.u}</span></div>`).join('');
     }
 
-    function filterItems(cat) {
-        const filtered = allItems.filter(i => i.c === cat);
-        document.getElementById('categories-list').style.display = 'none';
-        document.getElementById('filtered-items').style.display = 'block';
-        document.getElementById('back-action').style.display = 'block';
-        document.getElementById('title').innerText = cat;
-        document.getElementById('filtered-items').innerHTML = filtered.map(i => `<div class="card"><div><b>@${i.u}</b><br><span>$${i.p}</span></div><button class="btn" style="width:auto; padding:10px" onclick="addToCart('${i.u}','${i.p}')">ADD</button></div>`).join('');
+    function filter(c) {
+        const filtered = allData.filter(i => i.c == c);
+        document.getElementById('items-list').innerHTML = filtered.map(i => `<div class="card"><span>@${i.u} - $${i.p}</span></div>`).join('');
     }
 
-    function showCategories() {
-        document.getElementById('categories-list').style.display = 'block';
-        document.getElementById('filtered-items').style.display = 'none';
-        document.getElementById('back-action').style.display = 'none';
-        document.getElementById('title').innerText = 'TIK MARKET';
-    }
-
-    function addToCart(u, p) {
-        cart.push({u, p});
-        document.getElementById('count').innerText = cart.length;
-        document.getElementById('cart-items').innerHTML = cart.map(i => `<div class="card" style="padding:10px">@${i.u} - $${i.p}</div>`).join('');
-        document.getElementById('checkout-form').style.display = 'block';
-        tg.HapticFeedback.impactOccurred('medium');
-    }
-
-    function updatePayDetails() {
-        const val = document.getElementById('pay-method').value;
-        const found = paymentData.find(p => p.startsWith(val + "|"));
-        if(found) {
-            const [t, c] = found.split('|');
-            document.getElementById('display-title').innerText = t;
-            document.getElementById('display-content').innerText = c;
-            document.getElementById('copy-action').onclick = () => { navigator.clipboard.writeText(c); alert("Copied!"); };
-            document.getElementById('method-details').style.display = 'block';
-        }
-    }
-
-    async function massImport() {
-        const data = document.getElementById('mass-import-input').value;
-        if(!data) return;
+    async function sendMass() {
+        const val = document.getElementById('mass-input').value;
+        if(!val) return;
         await fetch(`${API}/admin/add`, {
-            method:'POST', 
-            headers:{'Content-Type':'application/json'}, 
-            body:JSON.stringify({data:data, user_id:tg.initDataUnsafe.user.id})
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({data:val, user_id:tg.initDataUnsafe.user.id})
         });
-        document.getElementById('mass-import-input').value = '';
+        document.getElementById('mass-input').value = '';
         load();
     }
 
-    async function deleteAcc(u) {
-        await fetch(`${API}/admin/delete_item`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({u:u, user_id:tg.initDataUnsafe.user.id})});
-        load();
-    }
-
-    async function addPay() { 
-        const s = document.getElementById('pay-name').value + "|" + document.getElementById('pay-val').value;
-        await fetch(`${API}/admin/add_pay`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({method:s, user_id:tg.initDataUnsafe.user.id})});
-        load(); 
-    }
-
-    async function deletePay(p) {
-        await fetch(`${API}/admin/delete_pay`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({method:p, user_id:tg.initDataUnsafe.user.id})});
-        load();
-    }
-
-    async function submitOrder() {
-        const f = document.getElementById('receipt-file').files[0];
-        if(!f) return;
-        const r = new FileReader();
-        r.readAsDataURL(f);
-        r.onload = async () => {
-            await fetch(`${API}/submit_order`, {
-                method:'POST', 
-                headers:{'Content-Type':'application/json'}, 
-                body:JSON.stringify({
-                    user_id:tg.initDataUnsafe.user.id, 
-                    user_name:tg.initDataUnsafe.user.username||"User", 
-                    items:cart, 
-                    method:document.getElementById('pay-method').value, 
-                    image:r.result, 
-                    total:cart.reduce((s,i)=>s+parseFloat(i.p),0)
-                })
-            });
-            tg.close();
-        };
-    }
     tg.expand();
     load();
 </script>
