@@ -160,20 +160,51 @@
         navigator.clipboard.writeText(document.getElementById('pay-details').innerText);
         tg.showAlert("Copied");
     }
+async function sendOrder() {
+    const f = document.getElementById('receipt').files[0];
+    if(!f) return tg.showAlert("Select file");
+    
+    // تغيير نص الزر حتى يعرف الزبون أن الإرسال جاري
+    const btn = event.currentTarget;
+    const originalText = btn.innerText;
+    btn.disabled = true;
+    btn.innerText = "SENDING...";
 
-    async function sendOrder() {
-        const f = document.getElementById('receipt').files[0];
-        if(!f) return tg.showAlert("Select file");
-        const reader = new FileReader(); reader.readAsDataURL(f);
-        reader.onload = async () => {
-            await fetch(`${API}/submit_order`, {
-                method:'POST', headers:{'Content-Type':'application/json'},
+    const reader = new FileReader(); 
+    reader.readAsDataURL(f);
+    reader.onload = async () => {
+        try {
+            const r = await fetch(`${API}/submit_order`, {
+                method:'POST', 
+                headers:{'Content-Type':'application/json'},
                 body:JSON.stringify({
-                    user_id:tg.initDataUnsafe.user.id, user_name:tg.initDataUnsafe.user.username,
-                    items:cart, method:document.getElementById('pay-sel').value,
-                    image:reader.result, total:document.getElementById('total-price').innerText
+                    user_id:tg.initDataUnsafe.user.id, 
+                    user_name:tg.initDataUnsafe.user.username || "User",
+                    items:cart, 
+                    method:document.getElementById('pay-sel').value,
+                    image:reader.result, 
+                    total:document.getElementById('total-price').innerText
                 })
             });
+
+            if(r.ok) {
+                // الرسالة التي تظهر للزبون بعد الضغط على Send
+                tg.showAlert("Your order has been sent successfully! Please wait for admin approval.", () => {
+                    tg.close(); // ينغلق التطبيق بعد ما يضغط الزبون OK على الرسالة
+                });
+            } else {
+                tg.showAlert("Error sending order. Please try again.");
+                btn.disabled = false;
+                btn.innerText = originalText;
+            }
+        } catch(e) {
+            tg.showAlert("Connection error!");
+            btn.disabled = false;
+            btn.innerText = originalText;
+        }
+    }
+}
+
             tg.close();
         }
     }
