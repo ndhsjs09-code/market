@@ -10,25 +10,23 @@
         body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; padding-bottom: 90px; overflow-x: hidden; }
         .tab { display: none; animation: fadeIn 0.3s; } .active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .header-title { text-align: center; color: var(--main); font-weight: 900; letter-spacing: 2px; margin-bottom: 20px; font-size: 24px; text-transform: uppercase; }
         .card { background: var(--card); border: 1px solid #1f1f1f; padding: 18px; border-radius: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.6); }
-        .btn { background: var(--main); color: #000; border: none; padding: 14px; border-radius: 12px; cursor: pointer; width: 100%; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; }
+        .btn { background: var(--main); color: #000; border: none; padding: 14px; border-radius: 12px; cursor: pointer; width: 100%; font-weight: 800; text-transform: uppercase; transition: 0.3s; }
         .btn:active { transform: scale(0.95); background: var(--accent); }
         .btn-del { background: #ff4d6d; color: #fff; padding: 8px 12px; width: auto; font-size: 11px; border-radius: 8px; }
         .nav { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(15,15,15,0.9); backdrop-filter: blur(15px); display: flex; justify-content: space-around; padding: 18px 0; border-top: 1px solid #222; z-index: 1000; }
-        .nav-item { color: #555; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.3s; } .nav-item.active-nav { color: var(--main); text-shadow: 0 0 10px var(--main); }
-        input, textarea, select { width: 100%; padding: 14px; margin: 10px 0; background: #111; color: #fff; border: 1px solid #222; border-radius: 10px; outline: none; transition: 0.3s; }
-        input:focus { border-color: var(--main); box-shadow: 0 0 8px rgba(255,182,193,0.3); }
+        .nav-item { color: #555; cursor: pointer; font-size: 13px; font-weight: bold; } .nav-item.active-nav { color: var(--main); text-shadow: 0 0 10px var(--main); }
+        input, textarea, select { width: 100%; padding: 14px; margin: 10px 0; background: #111; color: #fff; border: 1px solid #222; border-radius: 10px; outline: none; }
         .cat-card { background: linear-gradient(145deg, #141414, #0f0f0f); padding: 30px; border-radius: 20px; margin-bottom: 15px; text-align: center; border: 1px solid #222; cursor: pointer; font-size: 20px; font-weight: 900; color: var(--main); }
-        .cat-card:active { border-color: var(--main); transform: scale(0.97); }
-        h3 { color: var(--main); font-size: 22px; margin-bottom: 20px; text-shadow: 0 0 5px rgba(255,182,193,0.2); }
-        
         .copy-wrapper { display: flex; justify-content: space-between; align-items: center; width: 100%; }
-        .copy-inner-btn { background: var(--main); color: #000; border: none; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        .copy-inner-btn { background: var(--main); color: #000; border: none; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div id="store-tab" class="tab active">
+    <div class="header-title">TIKTOK USERNAME</div>
     <div id="cat-menu">
         <div class="cat-card" onclick="showCat('3C/L')">3C/L</div>
         <div class="cat-card" onclick="showCat('4CC/LL')">4CC/LL</div>
@@ -48,7 +46,7 @@
     <div id="cart-list"></div>
     <div id="pay-area" style="display:none">
         <select id="pay-sel" onchange="updatePayInfo()"></select>
-        <div id="pay-info" style="padding:15px; border-radius:12px; border:1px dashed var(--main); margin:20px 0; background: #0c0c0c; color: var(--main); font-weight: 500; min-height: 20px;"></div>
+        <div id="pay-info" style="padding:15px; border-radius:12px; border:1px dashed var(--main); margin:20px 0; background: #0c0c0c; color: var(--main); font-weight: 500; display: none;"></div>
         <input type="file" id="receipt" accept="image/*">
         <button class="btn" id="send-btn" onclick="sendOrder()">CONFIRM AND SEND</button>
     </div>
@@ -66,10 +64,8 @@
     </select>
     <textarea id="admin-in" style="height:120px" placeholder="user:pass:price"></textarea>
     <button class="btn" onclick="addAccs()">ADD ACCOUNTS</button>
-
     <h3>MANAGE STOCK</h3>
     <div id="admin-items-list"></div>
-
     <h3>PAYMENT METHODS</h3>
     <input type="text" id="p-name" placeholder="Method Name">
     <input type="text" id="p-val" placeholder="Wallet Details">
@@ -86,27 +82,29 @@
 <script>
     const tg = window.Telegram.WebApp;
     const API = "https://laquita-unperturbed-altagracia.ngrok-free.dev";
+    const ADMIN_ID = 5939498558;
     let cart = [], allI = [], allP = [];
 
-    const ADMIN_ID = 0; // Set your admin ID here
-
-    if(tg.initDataUnsafe.user && tg.initDataUnsafe.user.id == ADMIN_ID) document.getElementById('admin-btn').style.display='block';
+    if(tg.initDataUnsafe.user && tg.initDataUnsafe.user.id == ADMIN_ID) {
+        document.getElementById('admin-btn').style.display='block';
+    }
 
     function tab(id) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active-nav'));
-        const activeNav = Array.from(document.querySelectorAll('.nav-item')).find(n => n.innerText.includes(id.split('-')[0].toUpperCase()));
-        if(activeNav) activeNav.classList.add('active-nav');
+        event.currentTarget.classList.add('active-nav');
         if(id === 'admin-tab') renderAdminItems();
     }
 
     async function load() {
-        const r = await fetch(`${API}/get_all`, {headers:{"ngrok-skip-browser-warning":"true"}});
-        const d = await r.json();
-        allI = d.items; allP = d.payments;
-        document.getElementById('pay-sel').innerHTML = '<option disabled selected>CHOOSE PAYMENT</option>' + allP.map(p=>`<option value="${p.split('|')[0]}">${p.split('|')[0]}</option>`).join('');
-        document.getElementById('admin-pays').innerHTML = allP.map(p=>`<div class="card"><span>${p.split('|')[0]}</span><button class="btn btn-del" onclick="delP('${p}')">DEL</button></div>`).join('');
+        try {
+            const r = await fetch(`${API}/get_all`, {headers:{"ngrok-skip-browser-warning":"true"}});
+            const d = await r.json();
+            allI = d.items; allP = d.payments;
+            document.getElementById('pay-sel').innerHTML = '<option disabled selected>CHOOSE PAYMENT</option>' + allP.map(p=>`<option value="${p.split('|')[0]}">${p.split('|')[0]}</option>`).join('');
+            document.getElementById('admin-pays').innerHTML = allP.map(p=>`<div class="card"><span>${p.split('|')[0]}</span><button class="btn btn-del" onclick="delP('${p}')">DEL</button></div>`).join('');
+        } catch(e) { console.error(e); }
     }
 
     function showCat(c) {
@@ -141,12 +139,7 @@
         const infoDiv = document.getElementById('pay-info');
         if(p) { 
             const val = p.split('|')[1];
-            infoDiv.innerHTML = `
-                <div class="copy-wrapper">
-                    <span>${val}</span>
-                    <button class="copy-inner-btn" onclick="copyData('${val}')">COPY</button>
-                </div>
-            `;
+            infoDiv.innerHTML = `<div class="copy-wrapper"><span>${val}</span><button class="copy-inner-btn" onclick="copyData('${val}')">COPY</button></div>`;
             infoDiv.style.display='block'; 
         }
     }
@@ -164,7 +157,7 @@
         const d = document.getElementById('admin-in').value;
         const c = document.getElementById('admin-cat').value;
         await fetch(`${API}/admin/add`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:tg.initDataUnsafe.user.id, data:d, cat:c})});
-        document.getElementById('admin-in').value = ""; load(); tg.HapticFeedback.impactOccurred('medium');
+        document.getElementById('admin-in').value = ""; load();
     }
 
     async function addP() {
