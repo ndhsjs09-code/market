@@ -319,31 +319,62 @@
         load();
     }
 
-    async function sendOrder() {
-        const f = document.getElementById('receipt').files[0];
-        if(!f) return alert("Select receipt");
-        const btn = document.getElementById('send-btn');
-        btn.disabled=true; btn.innerText="SENDING";
-        const reader = new FileReader();
-        reader.readAsDataURL(f);
-        reader.onload = async () => {
-            const img = new Image(); img.src = reader.result;
-            img.onload = async () => {
-                const canvas = document.createElement('canvas');
-                const scale = 800/img.width;
-                canvas.width=800; canvas.height=img.height*scale;
-                canvas.getContext('2d').drawImage(img,0,0,800,canvas.height);
-                await fetch(`${API}/submit_order`, {
-                    method:'POST', headers:{'Content-Type':'application/json'},
-                    body:JSON.stringify({
-                        user_id:tg.initDataUnsafe.user.id, user_name:tg.initDataUnsafe.user.username || "User",
-                        items:cart, method:document.getElementById('pay-sel').value,
-                        image:canvas.toDataURL('image/jpeg', 0.6), total:cart.reduce((s,i)=>s+parseFloat(i.p),0)
+ async function sendOrder() {
+    const f = document.getElementById('receipt').files[0];
+    if(!f) {
+        tg.showAlert("Please select a payment receipt image first!");
+        return;
+    }
+    
+    const btn = document.getElementById('send-btn');
+    btn.disabled = true; 
+    btn.innerText = "SENDING...";
+
+    const reader = new FileReader();
+    reader.readAsDataURL(f);
+    reader.onload = async () => {
+        const img = new Image();
+        img.src = reader.result;
+        img.onload = async () => {
+            const canvas = document.createElement('canvas');
+            const scale = 800/img.width;
+            canvas.width = 800; 
+            canvas.height = img.height * scale;
+            canvas.getContext('2d').drawImage(img, 0, 0, 800, canvas.height);
+            
+            try {
+                const response = await fetch(`${API}/submit_order`, {
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        user_id: tg.initDataUnsafe.user.id, 
+                        user_name: tg.initDataUnsafe.user.username || "User",
+                        items: cart, 
+                        method: document.getElementById('pay-sel').value,
+                        image: canvas.toDataURL('image/jpeg', 0.6), 
+                        total: cart.reduce((s, i) => s + parseFloat(i.p), 0)
                     })
                 });
-                tg.close();
+
+                if (response.ok) {
+                    // --- الإضافة الجديدة: تنبيه داخل التطبيق ---
+                    tg.showConfirm("Order Sent Successfully! It is now pending review.", (ok) => {
+                        tg.close(); // يغلق التطبيق بعد الضغط على OK
+                    });
+                } else {
+                    tg.showAlert("Error sending order. Please try again.");
+                    btn.disabled = false;
+                    btn.innerText = "CONFIRM AND SEND";
+                }
+            } catch (e) {
+                tg.showAlert("Connection error!");
+                btn.disabled = false;
+                btn.innerText = "CONFIRM AND SEND";
             }
         }
+    }
+}
+
     }
     tg.expand(); load();
 </script>
