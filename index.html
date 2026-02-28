@@ -3,18 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Store</title>
+    <title>Pink Premium Store</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --main: #ff2d75; --bg: #000; }
-        body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; padding: 20px; padding-bottom: 80px; }
-        .tab { display: none; } .active { display: block; }
-        .card { background: #1a1a1a; border: 1px solid var(--main); padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .btn { background: var(--main); color: #fff; border: none; padding: 10px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; }
-        .nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #111; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid var(--main); }
-        .nav-item { color: #888; cursor: pointer; } .nav-item.active-nav { color: var(--main); }
-        input, textarea, select { width: 100%; padding: 12px; margin: 5px 0; background: #222; color: #fff; border: 1px solid #444; border-radius: 5px; box-sizing: border-box; }
-        .cat-card { background: #1a1a1a; padding: 20px; border-radius: 10px; margin-bottom: 10px; text-align: center; border: 1px solid #333; cursor: pointer; font-weight: bold; }
+        :root { --main: #ffb6c1; --accent: #ff85a1; --bg: #0a0a0a; --card: #141414; }
+        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; padding-bottom: 90px; overflow-x: hidden; }
+        .tab { display: none; animation: fadeIn 0.3s; } .active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .card { background: var(--card); border: 1px solid #1f1f1f; padding: 18px; border-radius: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.6); }
+        .btn { background: var(--main); color: #000; border: none; padding: 14px; border-radius: 12px; cursor: pointer; width: 100%; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; }
+        .btn:active { transform: scale(0.95); background: var(--accent); }
+        .btn-del { background: #ff4d6d; color: #fff; padding: 8px 12px; width: auto; font-size: 11px; border-radius: 8px; }
+        .nav { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(15,15,15,0.9); backdrop-filter: blur(15px); display: flex; justify-content: space-around; padding: 18px 0; border-top: 1px solid #222; z-index: 1000; }
+        .nav-item { color: #555; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.3s; } .nav-item.active-nav { color: var(--main); text-shadow: 0 0 10px var(--main); }
+        input, textarea, select { width: 100%; padding: 14px; margin: 10px 0; background: #111; color: #fff; border: 1px solid #222; border-radius: 10px; outline: none; transition: 0.3s; }
+        input:focus { border-color: var(--main); box-shadow: 0 0 8px rgba(255,182,193,0.3); }
+        .cat-card { background: linear-gradient(145deg, #141414, #0f0f0f); padding: 30px; border-radius: 20px; margin-bottom: 15px; text-align: center; border: 1px solid #222; cursor: pointer; font-size: 20px; font-weight: 900; color: var(--main); }
+        .cat-card:active { border-color: var(--main); transform: scale(0.97); }
+        h3 { color: var(--main); font-size: 22px; margin-bottom: 20px; text-shadow: 0 0 5px rgba(255,182,193,0.2); }
+        
+        .copy-wrapper { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .copy-inner-btn { background: var(--main); color: #000; border: none; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -29,22 +38,24 @@
         <div class="cat-card" onclick="showCat('Others')">Others</div>
     </div>
     <div id="items-view" style="display:none">
-        <button class="btn" onclick="backToCats()" style="margin-bottom:10px; width: auto;">Back</button>
+        <button class="btn" onclick="backToCats()" style="margin-bottom:20px; width: auto; background: #1a1a1a; color: var(--main);">BACK</button>
         <div id="items-list"></div>
     </div>
 </div>
 
 <div id="cart-tab" class="tab">
+    <h3>CART</h3>
     <div id="cart-list"></div>
     <div id="pay-area" style="display:none">
         <select id="pay-sel" onchange="updatePayInfo()"></select>
-        <div id="pay-info" style="padding:10px; border:1px dashed var(--main); margin:10px 0; display:none"></div>
+        <div id="pay-info" style="padding:15px; border-radius:12px; border:1px dashed var(--main); margin:20px 0; background: #0c0c0c; color: var(--main); font-weight: 500; min-height: 20px;"></div>
         <input type="file" id="receipt" accept="image/*">
-        <button class="btn" id="send-btn" onclick="sendOrder()">Submit Order</button>
+        <button class="btn" id="send-btn" onclick="sendOrder()">CONFIRM AND SEND</button>
     </div>
 </div>
 
 <div id="admin-tab" class="tab">
+    <h3>ADMIN PANEL</h3>
     <select id="admin-cat">
         <option value="Auto">Auto Detect</option>
         <option value="3C/L">3C/L</option>
@@ -53,18 +64,23 @@
         <option value="4C/L">4C/L</option>
         <option value="Double/Triple">Double/Triple</option>
     </select>
-    <textarea id="admin-in" placeholder="user:pass:price"></textarea>
-    <button class="btn" onclick="addAccs()">Add Accounts</button>
+    <textarea id="admin-in" style="height:120px" placeholder="user:pass:price"></textarea>
+    <button class="btn" onclick="addAccs()">ADD ACCOUNTS</button>
+
+    <h3>MANAGE STOCK</h3>
+    <div id="admin-items-list"></div>
+
+    <h3>PAYMENT METHODS</h3>
     <input type="text" id="p-name" placeholder="Method Name">
-    <input type="text" id="p-val" placeholder="Details">
-    <button class="btn" onclick="addP()">Add Payment</button>
-    <div id="admin-pays"></div>
+    <input type="text" id="p-val" placeholder="Wallet Details">
+    <button class="btn" onclick="addP()">SAVE METHOD</button>
+    <div id="admin-pays" style="margin-top:20px"></div>
 </div>
 
 <nav class="nav">
-    <div class="nav-item active-nav" onclick="tab('store-tab')">Store</div>
-    <div class="nav-item" onclick="tab('cart-tab')">Cart (<span id="count">0</span>)</div>
-    <div id="admin-btn" class="nav-item" style="display:none" onclick="tab('admin-tab')">Admin</div>
+    <div class="nav-item active-nav" onclick="tab('store-tab')">STORE</div>
+    <div class="nav-item" onclick="tab('cart-tab')">CART (<span id="count">0</span>)</div>
+    <div id="admin-btn" class="nav-item" style="display:none" onclick="tab('admin-tab')">ADMIN</div>
 </nav>
 
 <script>
@@ -72,56 +88,92 @@
     const API = "https://laquita-unperturbed-altagracia.ngrok-free.dev";
     let cart = [], allI = [], allP = [];
 
-    if(tg.initDataUnsafe.user && tg.initDataUnsafe.user.id == 5939498558) document.getElementById('admin-btn').style.display='block';
+    const ADMIN_ID = 0; // Set your admin ID here
+
+    if(tg.initDataUnsafe.user && tg.initDataUnsafe.user.id == ADMIN_ID) document.getElementById('admin-btn').style.display='block';
 
     function tab(id) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active-nav'));
-        event.currentTarget.classList.add('active-nav');
+        const activeNav = Array.from(document.querySelectorAll('.nav-item')).find(n => n.innerText.includes(id.split('-')[0].toUpperCase()));
+        if(activeNav) activeNav.classList.add('active-nav');
+        if(id === 'admin-tab') renderAdminItems();
     }
 
     async function load() {
         const r = await fetch(`${API}/get_all`, {headers:{"ngrok-skip-browser-warning":"true"}});
         const d = await r.json();
         allI = d.items; allP = d.payments;
-        document.getElementById('pay-sel').innerHTML = '<option disabled selected>Payment</option>' + allP.map(p=>`<option value="${p.split('|')[0]}">${p.split('|')[0]}</option>`).join('');
-        document.getElementById('admin-pays').innerHTML = allP.map(p=>`<div class="card"><span>${p.split('|')[0]}</span><button class="btn" style="width:auto" onclick="delP('${p}')">Delete</button></div>`).join('');
+        document.getElementById('pay-sel').innerHTML = '<option disabled selected>CHOOSE PAYMENT</option>' + allP.map(p=>`<option value="${p.split('|')[0]}">${p.split('|')[0]}</option>`).join('');
+        document.getElementById('admin-pays').innerHTML = allP.map(p=>`<div class="card"><span>${p.split('|')[0]}</span><button class="btn btn-del" onclick="delP('${p}')">DEL</button></div>`).join('');
     }
 
     function showCat(c) {
         document.getElementById('cat-menu').style.display='none';
         document.getElementById('items-view').style.display='block';
         const filtered = allI.filter(i => i.c == c);
-        document.getElementById('items-list').innerHTML = filtered.map(i => `<div class="card"><div>@${i.u}<br>$${i.p}</div><button class="btn" style="width:auto" onclick="addToCart('${i.u}','${i.p}')">Add</button></div>`).join('');
+        document.getElementById('items-list').innerHTML = filtered.map(i => `<div class="card"><div><b style="color:var(--main); font-size:16px;">@${i.u}</b><br><small style="color:#666">$${i.p}</small></div><button class="btn" style="width:auto" onclick="addToCart('${i.u}','${i.p}')">ADD</button></div>`).join('');
     }
+
     function backToCats() { document.getElementById('cat-menu').style.display='block'; document.getElementById('items-view').style.display='none'; }
 
-    function addToCart(u,p) { cart.push({u,p}); document.getElementById('count').innerText=cart.length; renderCart(); }
+    function renderAdminItems() {
+        document.getElementById('admin-items-list').innerHTML = allI.map(i => `<div class="card" style="padding:10px; font-size:13px"><span>@${i.u}</span><button class="btn btn-del" onclick="delUser('${i.u}')">REMOVE</button></div>`).join('');
+    }
+
+    async function delUser(u) {
+        await fetch(`${API}/admin/delete_user`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:tg.initDataUnsafe.user.id, username:u})});
+        load(); setTimeout(renderAdminItems, 400);
+    }
+
+    function addToCart(u,p) { cart.push({u,p}); document.getElementById('count').innerText=cart.length; renderCart(); tg.HapticFeedback.notificationOccurred('success'); }
+    
     function renderCart() {
         const c = document.getElementById('cart-list');
-        if(cart.length==0) { c.innerHTML="Empty"; document.getElementById('pay-area').style.display='none'; }
-        else { c.innerHTML=cart.map(i=>`<div class="card">@${i.u} - $${i.p}</div>`).join(''); document.getElementById('pay-area').style.display='block'; }
+        if(cart.length==0) { c.innerHTML="<p style='color:#444; text-align:center;'>CART IS EMPTY</p>"; document.getElementById('pay-area').style.display='none'; }
+        else { c.innerHTML=cart.map(i=>`<div class="card">@${i.u}<span style="color:var(--main)">$${i.p}</span></div>`).join(''); document.getElementById('pay-area').style.display='block'; }
     }
 
     function updatePayInfo() {
         const v = document.getElementById('pay-sel').value;
         const p = allP.find(x=>x.startsWith(v+'|'));
-        if(p) { document.getElementById('pay-info').innerText=p.split('|')[1]; document.getElementById('pay-info').style.display='block'; }
+        const infoDiv = document.getElementById('pay-info');
+        if(p) { 
+            const val = p.split('|')[1];
+            infoDiv.innerHTML = `
+                <div class="copy-wrapper">
+                    <span>${val}</span>
+                    <button class="copy-inner-btn" onclick="copyData('${val}')">COPY</button>
+                </div>
+            `;
+            infoDiv.style.display='block'; 
+        }
+    }
+
+    function copyData(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = event.target;
+            btn.innerText = "COPIED";
+            setTimeout(() => { btn.innerText = "COPY"; }, 1500);
+            tg.HapticFeedback.impactOccurred('light');
+        });
     }
 
     async function addAccs() {
         const d = document.getElementById('admin-in').value;
         const c = document.getElementById('admin-cat').value;
         await fetch(`${API}/admin/add`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:tg.initDataUnsafe.user.id, data:d, cat:c})});
-        document.getElementById('admin-in').value = ""; load();
+        document.getElementById('admin-in').value = ""; load(); tg.HapticFeedback.impactOccurred('medium');
     }
+
     async function addP() {
         const n = document.getElementById('p-name').value;
         const v = document.getElementById('p-val').value;
         await fetch(`${API}/admin/add_pay`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:tg.initDataUnsafe.user.id, method:n+'|'+v})});
         load();
     }
+
     async function delP(m) {
         await fetch(`${API}/admin/delete_pay`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:tg.initDataUnsafe.user.id, method:m})});
         load();
@@ -129,9 +181,9 @@
 
     async function sendOrder() {
         const f = document.getElementById('receipt').files[0];
-        if(!f) return;
+        if(!f) return alert("Upload receipt first");
         const btn = document.getElementById('send-btn');
-        btn.disabled=true;
+        btn.disabled=true; btn.innerText="SENDING";
         const reader = new FileReader();
         reader.readAsDataURL(f);
         reader.onload = async () => {
