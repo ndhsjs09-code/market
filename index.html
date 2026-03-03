@@ -9,16 +9,17 @@
         :root { --main: #ffb6c1; --bg: #0a0a0a; --card: #141414; }
         body { background: var(--bg); color: #fff; font-family: sans-serif; padding: 15px; padding-bottom: 100px; margin:0; }
         .tab { display: none; } .active { display: block; }
-        .header-title { text-align: center; color: var(--main); font-weight: 900; margin-bottom: 20px; font-size: 24px; }
-        .cat-card { background: var(--card); padding: 25px; border-radius: 15px; margin-bottom: 12px; text-align: center; border: 1px solid #222; font-size: 18px; font-weight: 800; color: var(--main); }
-        .card { background: var(--card); border: 1px solid #1f1f1f; padding: 12px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-        .btn { background: var(--main); color: #000; border: none; padding: 14px; border-radius: 10px; width: 100%; font-weight: 800; font-size: 15px; margin-top: 8px; }
-        .btn-small { background: var(--main); color: #000; padding: 6px 12px; border-radius: 6px; border: none; font-weight: bold; font-size: 12px; }
-        .nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #0f0f0f; display: flex; justify-content: space-around; padding: 20px 0; border-top: 1px solid #222; }
-        .nav-item { color: #555; cursor: pointer; font-weight: 900; font-size: 14px; } .active-nav { color: var(--main); }
-        input, textarea, select { width: 100%; padding: 12px; margin: 6px 0; background: #111; color: #fff; border: 1px solid #222; border-radius: 8px; box-sizing: border-box; }
-        .admin-section { background:#111; padding:12px; border-radius:12px; margin-top:10px; border: 1px solid #222; }
-        h3 { font-size: 13px; color: var(--main); margin: 5px 0; }
+        .header-title { text-align: center; color: var(--main); font-weight: 900; margin-bottom: 20px; font-size: 22px; }
+        .cat-card { background: var(--card); padding: 20px; border-radius: 12px; margin-bottom: 10px; text-align: center; border: 1px solid #222; font-weight: bold; color: var(--main); }
+        .card { background: var(--card); border: 1px solid #1f1f1f; padding: 12px; border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .btn { background: var(--main); color: #000; border: none; padding: 14px; border-radius: 10px; width: 100%; font-weight: 800; margin-top: 5px; }
+        .btn-small { background: var(--main); color: #000; padding: 5px 10px; border-radius: 5px; border: none; font-size: 11px; font-weight: bold; }
+        .btn-del { background: #ff4d6d; color: #fff; padding: 5px 10px; border-radius: 5px; border: none; font-size: 10px; }
+        .nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #0f0f0f; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #222; }
+        .nav-item { color: #555; cursor: pointer; font-weight: 900; } .active-nav { color: var(--main); }
+        input, textarea, select { width: 100%; padding: 10px; margin: 5px 0; background: #111; color: #fff; border: 1px solid #222; border-radius: 8px; box-sizing: border-box; }
+        .admin-section { background:#111; padding:10px; border-radius:10px; margin-top:10px; border: 1px solid #333; }
+        h3 { font-size: 12px; color: var(--main); margin: 5px 0; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -34,26 +35,35 @@
         <div class="cat-card" onclick="showCat('Others')">Others</div>
     </div>
     <div id="items-view" style="display:none">
-        <button class="btn-small" onclick="backToCats()" style="margin-bottom:10px">BACK</button>
+        <button class="btn-small" onclick="backToCats()" style="background:#444; color:#fff;">← BACK</button>
         <div id="items-list"></div>
     </div>
 </div>
 
 <div id="admin-tab" class="tab">
     <div class="header-title">ADMIN PANEL</div>
+    
     <div class="admin-section">
-        <h3>Target Category</h3>
+        <h3>1. Add Accounts</h3>
         <select id="target-cat">
-            <option value="3C/L">3C/L</option>
-            <option value="4CC/LL">4CC/LL</option>
-            <option value="Double/Triple">Double/Triple</option>
-            <option value="4C/L Same">4C/L Same</option>
-            <option value="4C/L">4C/L</option>
-            <option value="Others">Others</option>
+            <option value="3C/L">3C/L</option><option value="4CC/LL">4CC/LL</option>
+            <option value="Double/Triple">Double/Triple</option><option value="4C/L Same">4C/L Same</option>
+            <option value="4C/L">4C/L</option><option value="Others">Others</option>
         </select>
-        <h3>Data (user:pass:email:price)</h3>
-        <textarea id="admin-in" rows="5" placeholder="Use any separator like : or / or |"></textarea>
-        <button class="btn" onclick="addWithCat()">ADD ACCOUNTS</button>
+        <textarea id="admin-in" rows="3" placeholder="user:pass:price"></textarea>
+        <button class="btn" onclick="adminAction('add_users')">ADD TO SELECTED CAT</button>
+    </div>
+
+    <div class="admin-section">
+        <h3>2. Manage Payments</h3>
+        <input id="p-data" placeholder="Name | Details">
+        <button class="btn" onclick="adminAction('add_pay')">ADD PAYMENT</button>
+        <div id="admin-pay-list" style="margin-top:10px"></div>
+    </div>
+
+    <div class="admin-section">
+        <h3>3. Quick Delete Users</h3>
+        <div id="admin-items-list"></div>
     </div>
 </div>
 
@@ -66,12 +76,9 @@
     const tg = window.Telegram.WebApp;
     const API = "https://laquita-unperturbed-altagracia.ngrok-free.dev/sma"; 
     const ADMIN_IDS = [5859388511, 6920293690];
-    let allI = [];
+    let allI = [], allP = [];
 
-    // الترحيب المخصص
-    const firstName = tg.initDataUnsafe.user?.first_name || "Guest";
-    document.getElementById('welcome-msg').innerText = `Welcome ${firstName} to SMA Market`;
-
+    document.getElementById('welcome-msg').innerText = `Welcome ${tg.initDataUnsafe.user?.first_name || "User"} to SMA Market`;
     if(ADMIN_IDS.includes(tg.initDataUnsafe.user?.id)) document.getElementById('admin-btn').style.display='block';
 
     function tab(id, el) {
@@ -79,32 +86,42 @@
         document.getElementById(id).classList.add('active');
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active-nav'));
         el.classList.add('active-nav');
+        if(id === 'admin-tab') renderAdminLists();
     }
 
     async function load() {
         const r = await fetch(`${API}/get_all`, { headers: { "ngrok-skip-browser-warning": "1" } });
         const d = await r.json();
-        allI = d.items;
+        allI = d.items; allP = d.payments;
     }
 
-    async function addWithCat() {
-        const cat = document.getElementById('target-cat').value;
-        const content = document.getElementById('admin-in').value;
-        if(!content) return;
-        
+    async function adminAction(action) {
+        let content = (action==='add_users') ? document.getElementById('admin-in').value : 
+                      (action==='add_pay') ? document.getElementById('p-data').value : "";
+        let cat = document.getElementById('target-cat').value;
+
         await fetch(`${API}/admin/manage`, {
             method:'POST',
             headers:{'Content-Type':'application/json', 'ngrok-skip-browser-warning':'1'},
-            body:JSON.stringify({
-                user_id: tg.initDataUnsafe.user.id,
-                action: 'add_users',
-                cat: cat, // نرسل القسم المختار
-                content: content
-            })
+            body:JSON.stringify({ user_id:tg.initDataUnsafe.user.id, action, content, cat })
         });
-        tg.showAlert(`Added to ${cat} successfully`);
-        document.getElementById('admin-in').value = "";
-        load();
+        tg.showAlert("Done!"); load(); renderAdminLists();
+    }
+
+    async function delItem(action, val) {
+        await fetch(`${API}/admin/manage`, {
+            method:'POST',
+            headers:{'Content-Type':'application/json', 'ngrok-skip-browser-warning':'1'},
+            body:JSON.stringify({ user_id:tg.initDataUnsafe.user.id, action, content:val })
+        });
+        load(); setTimeout(renderAdminLists, 500);
+    }
+
+    function renderAdminLists() {
+        document.getElementById('admin-pay-list').innerHTML = allP.map(p => `
+            <div class="card" style="font-size:11px"><span>${p.split('|')[0]}</span><button class="btn-del" onclick="delItem('del_pay','${p}')">DEL</button></div>`).join('');
+        document.getElementById('admin-items-list').innerHTML = allI.slice(0,10).map(i => `
+            <div class="card" style="font-size:11px"><span>@${i.u}</span><button class="btn-del" onclick="delItem('del_user','${i.u}')">DEL</button></div>`).join('');
     }
 
     function showCat(c) {
@@ -112,12 +129,9 @@
         document.getElementById('items-view').style.display='block';
         const filtered = allI.filter(i => i.c == c);
         document.getElementById('items-list').innerHTML = filtered.length === 0 ? '<p style="text-align:center;">EMPTY</p>' : filtered.map(i => `
-            <div class="card">
-                <div><b>@${i.u}</b><br><small>$${i.p}</small></div>
-                <button class="btn-small">ADD</button>
-            </div>`).join('');
+            <div class="card"><div><b>@${i.u}</b><br><small>$${i.p}</small></div><button class="btn-small">ADD</button></div>`).join('');
     }
-    
+
     function backToCats() { document.getElementById('cat-menu').style.display='block'; document.getElementById('items-view').style.display='none'; }
     tg.expand(); load();
 </script>
