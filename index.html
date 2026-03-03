@@ -18,7 +18,7 @@
         .nav-item { color: #555; cursor: pointer; font-weight: 900; } .active-nav { color: var(--main); }
         input, textarea, select { width: 100%; padding: 10px; margin: 5px 0; background: #111; color: #fff; border: 1px solid #222; border-radius: 8px; box-sizing: border-box; }
         .admin-sec { background: #111; padding: 10px; border-radius: 10px; margin-top: 15px; border: 1px solid #333; }
-        h3 { font-size: 12px; color: var(--main); margin-bottom: 8px; text-transform: uppercase; }
+        h3 { font-size: 11px; color: var(--main); margin-bottom: 8px; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -38,7 +38,7 @@
 </div>
 
 <div id="cart-tab" class="tab">
-    <div class="header-title">CART</div>
+    <div class="header-title">YOUR CART</div>
     <div id="cart-list"></div>
     <div id="cart-footer" style="display:none; text-align:center; margin-top:20px;">
         <button class="btn">CHECKOUT</button>
@@ -46,16 +46,25 @@
 </div>
 
 <div id="admin-tab" class="tab">
-    <div class="header-title">ADMIN PANEL</div>
+    <div class="header-title">SMA ADMIN</div>
+    
     <div class="admin-sec">
-        <h3>1. Add Accounts</h3>
-        <select id="target-cat"><option value="3C/L">3C/L</option><option value="4CC/LL">4CC/LL</option><option value="Others">Others</option></select>
+        <h3>1. ADD USERS TO CATEGORY</h3>
+        <select id="target-cat"><option value="3C/L">3C/L</option><option value="4CC/LL">4CC/LL</option><option value="Double/Triple">Double/Triple</option><option value="Others">Others</option></select>
         <textarea id="admin-in" rows="3" placeholder="user:pass:price"></textarea>
-        <button class="btn" onclick="adminAction('add_users')">ADD TO SECTION</button>
+        <button class="btn" onclick="adminAction('add_users')">SAVE ACCOUNTS</button>
     </div>
+
     <div class="admin-sec">
-        <h3>2. Delete Items</h3>
-        <div id="admin-items-list">Loading inventory...</div>
+        <h3>2. PAYMENT METHODS</h3>
+        <input id="pay-data" placeholder="Method Name | Details">
+        <button class="btn" onclick="adminAction('add_pay')">ADD PAYMENT</button>
+        <div id="admin-pay-list" style="margin-top:10px"></div>
+    </div>
+
+    <div class="admin-sec">
+        <h3>3. MANAGE INVENTORY</h3>
+        <div id="admin-items-list">Loading...</div>
     </div>
 </div>
 
@@ -69,16 +78,18 @@
     const tg = window.Telegram.WebApp;
     const API = "https://laquita-unperturbed-altagracia.ngrok-free.dev/sma";
     const ADMIN_SMA = [5939498558];
-    let allI = [], cart = [];
+    let allI = [], allP = [], cart = [];
 
     if(ADMIN_SMA.includes(tg.initDataUnsafe.user?.id)) document.getElementById('admin-btn').style.display='block';
 
     async function load() {
         try {
             const r = await fetch(`${API}/get_all`, { headers: {"ngrok-skip-browser-warning":"1"} });
-            const d = await r.json(); allI = d.items || [];
+            const d = await r.json(); 
+            allI = d.items || [];
+            allP = d.payments || [];
             if(document.getElementById('admin-tab').classList.contains('active')) renderAdmin();
-        } catch(e) { console.error("Error loading"); }
+        } catch(e) { console.error("Load error"); }
     }
 
     function tab(id, el) {
@@ -91,27 +102,26 @@
     }
 
     async function adminAction(action) {
-        const content = document.getElementById('admin-in').value;
-        const cat = document.getElementById('target-cat').value;
+        let content = (action==='add_users') ? document.getElementById('admin-in').value : (action==='add_pay') ? document.getElementById('pay-data').value : "";
+        let cat = document.getElementById('target-cat').value;
         await fetch(`${API}/admin/manage`, {
             method:'POST', headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'1'},
             body:JSON.stringify({user_id:tg.initDataUnsafe.user.id, action, content, cat})
         });
-        document.getElementById('admin-in').value=""; load();
+        tg.showAlert("Done!"); load();
     }
 
-    async function delItem(u) {
+    async function delItem(action, val) {
         await fetch(`${API}/admin/manage`, {
             method:'POST', headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'1'},
-            body:JSON.stringify({user_id:tg.initDataUnsafe.user.id, action:'del_user', content:u})
+            body:JSON.stringify({user_id:tg.initDataUnsafe.user.id, action, content:val})
         });
         load();
     }
 
     function renderAdmin() {
-        const list = document.getElementById('admin-items-list');
-        if(allI.length === 0) { list.innerHTML = "No items found."; return; }
-        list.innerHTML = allI.map(i => `<div class="card"><span>@${i.u}</span><button class="btn-small" style="background:red;color:white" onclick="delItem('${i.u}')">DEL</button></div>`).join('');
+        document.getElementById('admin-pay-list').innerHTML = allP.map(p => `<div class="card" style="font-size:11px"><span>${p}</span><button class="btn-small" style="background:red;color:white" onclick="delItem('del_pay','${p}')">DEL</button></div>`).join('');
+        document.getElementById('admin-items-list').innerHTML = allI.map(i => `<div class="card"><span>@${i.u}</span><button class="btn-small" style="background:red;color:white" onclick="delItem('del_user','${i.u}')">DEL</button></div>`).join('');
     }
 
     function addToCart(u, p) { cart.push({u, p}); document.getElementById('cart-count').innerText = cart.length; }
