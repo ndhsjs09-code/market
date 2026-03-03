@@ -16,7 +16,9 @@
         .btn-small { background: var(--main); color: #000; padding: 5px 10px; border-radius: 5px; font-size: 11px; font-weight: bold; border: none; }
         .nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #0f0f0f; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #222; }
         .nav-item { color: #555; cursor: pointer; font-weight: 900; } .active-nav { color: var(--main); }
-        input, textarea, select { width: 100%; padding: 10px; margin: 5px 0; background: #111; color: #fff; border: 1px solid #222; border-radius: 8px; }
+        input, textarea, select { width: 100%; padding: 10px; margin: 5px 0; background: #111; color: #fff; border: 1px solid #222; border-radius: 8px; box-sizing: border-box; }
+        .admin-sec { background: #111; padding: 10px; border-radius: 10px; margin-top: 15px; border: 1px solid #333; }
+        h3 { font-size: 12px; color: var(--main); margin-bottom: 5px; }
     </style>
 </head>
 <body>
@@ -26,8 +28,6 @@
         <div class="cat-card" onclick="showCat('3C/L')">3C/L</div>
         <div class="cat-card" onclick="showCat('4CC/LL')">4CC/LL</div>
         <div class="cat-card" onclick="showCat('Double/Triple')">Double/Triple</div>
-        <div class="cat-card" onclick="showCat('4C/L Same')">4C/L Same</div>
-        <div class="cat-card" onclick="showCat('4C/L')">4C/L</div>
         <div class="cat-card" onclick="showCat('Others')">Others</div>
     </div>
     <div id="items-view" style="display:none">
@@ -39,18 +39,29 @@
 <div id="cart-tab" class="tab">
     <div class="header-title">CART</div>
     <div id="cart-list"></div>
-    <div id="cart-footer" style="display:none; text-align:center;">
-        <h3 id="total-price">TOTAL: $0.00</h3>
+    <div id="cart-footer" style="display:none; text-align:center; margin-top:20px;">
         <button class="btn">CHECKOUT</button>
     </div>
 </div>
 
 <div id="admin-tab" class="tab">
-    <div class="header-title">SMA ADMIN</div>
-    <select id="target-cat"><option value="3C/L">3C/L</option><option value="4CC/LL">4CC/LL</option><option value="Double/Triple">Double/Triple</option><option value="4C/L Same">4C/L Same</option><option value="4C/L">4C/L</option><option value="Others">Others</option></select>
-    <textarea id="admin-in" rows="4" placeholder="user:pass:price"></textarea>
-    <button class="btn" onclick="addUsers()">ADD ACCOUNTS</button>
-    <div id="admin-items" style="margin-top:20px"></div>
+    <div class="header-title">ADMIN PANEL</div>
+    <div class="admin-sec">
+        <h3>ADD USERS</h3>
+        <select id="target-cat"><option value="3C/L">3C/L</option><option value="4CC/LL">4CC/LL</option><option value="Others">Others</option></select>
+        <textarea id="admin-in" rows="3" placeholder="user:pass:price"></textarea>
+        <button class="btn" onclick="adminAction('add_users')">ADD TO CAT</button>
+    </div>
+    <div class="admin-sec">
+        <h3>PAYMENTS</h3>
+        <input id="pay-data" placeholder="Method | Details">
+        <button class="btn" onclick="adminAction('add_pay')">ADD PAYMENT</button>
+        <div id="admin-pay-list" style="margin-top:10px"></div>
+    </div>
+    <div class="admin-sec">
+        <h3>DELETE USERS</h3>
+        <div id="admin-items-list"></div>
+    </div>
 </div>
 
 <nav class="nav">
@@ -63,7 +74,7 @@
     const tg = window.Telegram.WebApp;
     const API = "https://laquita-unperturbed-altagracia.ngrok-free.dev/sma";
     const ADMIN_SMA = [5939498558];
-    let allI = [], cart = [];
+    let allI = [], allP = [], cart = [];
 
     if(ADMIN_SMA.includes(tg.initDataUnsafe.user?.id)) document.getElementById('admin-btn').style.display='block';
 
@@ -78,52 +89,45 @@
 
     async function load() {
         const r = await fetch(`${API}/get_all`, { headers: {"ngrok-skip-browser-warning":"1"} });
-        const d = await r.json(); allI = d.items;
+        const d = await r.json(); allI = d.items; allP = d.payments || [];
     }
 
-    function addToCart(u, p) {
-        cart.push({u, p});
-        document.getElementById('cart-count').innerText = cart.length;
-        tg.HapticFeedback.impactOccurred('medium');
-    }
-
-    function renderCart() {
-        const list = document.getElementById('cart-list');
-        if(cart.length === 0) { list.innerHTML = "<p style='text-align:center;'>EMPTY</p>"; return; }
-        list.innerHTML = cart.map((i, idx) => `<div class="card"><span>@${i.u} - $${i.p}</span><button class="btn-small" style="background:red;color:white" onclick="cart.splice(${idx},1);renderCart();">X</button></div>`).join('');
-        document.getElementById('cart-footer').style.display = 'block';
-    }
-
-    async function addUsers() {
-        const content = document.getElementById('admin-in').value;
-        const cat = document.getElementById('target-cat').value;
+    async function adminAction(action) {
+        let content = (action==='add_users') ? document.getElementById('admin-in').value : (action==='add_pay') ? document.getElementById('pay-data').value : "";
+        let cat = document.getElementById('target-cat').value;
         await fetch(`${API}/admin/manage`, {
             method:'POST', headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'1'},
-            body:JSON.stringify({user_id:tg.initDataUnsafe.user.id, action:'add_users', content, cat})
+            body:JSON.stringify({user_id:tg.initDataUnsafe.user.id, action, content, cat})
         });
-        tg.showAlert("Added!"); document.getElementById('admin-in').value=""; load();
+        tg.showAlert("Done!"); load(); renderAdmin();
     }
 
-    function renderAdmin() {
-        document.getElementById('admin-items').innerHTML = allI.slice(0,10).map(i => `
-            <div class="card"><span>@${i.u}</span><button class="btn-small" style="background:red;color:white" onclick="delU('${i.u}')">DEL</button></div>`).join('');
-    }
-
-    async function delU(u) {
+    async function delItem(action, val) {
         await fetch(`${API}/admin/manage`, {
             method:'POST', headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'1'},
-            body:JSON.stringify({user_id:tg.initDataUnsafe.user.id, action:'del_user', content:u})
+            body:JSON.stringify({user_id:tg.initDataUnsafe.user.id, action, content:val})
         });
         load(); setTimeout(renderAdmin, 500);
     }
 
+    function renderAdmin() {
+        document.getElementById('admin-pay-list').innerHTML = allP.map(p => `<div class="card" style="font-size:11px"><span>${p}</span><button class="btn-small" style="background:red;color:white" onclick="delItem('del_pay','${p}')">DEL</button></div>`).join('');
+        document.getElementById('admin-items-list').innerHTML = allI.slice(0,10).map(i => `<div class="card"><span>@${i.u}</span><button class="btn-small" style="background:red;color:white" onclick="delItem('del_user','${i.u}')">DEL</button></div>`).join('');
+    }
+
+    function addToCart(u, p) { cart.push({u, p}); document.getElementById('cart-count').innerText = cart.length; }
+    function renderCart() {
+        const list = document.getElementById('cart-list');
+        if(cart.length === 0) { list.innerHTML = "<p style='text-align:center;'>EMPTY</p>"; return; }
+        list.innerHTML = cart.map((i, idx) => `<div class="card"><span>@${i.u} - $${i.p}</span><button class="btn-small" onclick="cart.splice(${idx},1);renderCart();">X</button></div>`).join('');
+        document.getElementById('cart-footer').style.display = 'block';
+    }
+
     function showCat(c) {
-        document.getElementById('cat-menu').style.display='none';
-        document.getElementById('items-view').style.display='block';
+        document.getElementById('cat-menu').style.display='none'; document.getElementById('items-view').style.display='block';
         const fil = allI.filter(i => i.c == c);
         document.getElementById('items-list').innerHTML = fil.map(i => `<div class="card"><div><b>@${i.u}</b><br><small>$${i.p}</small></div><button class="btn-small" onclick="addToCart('${i.u}','${i.p}')">ADD</button></div>`).join('');
     }
-
     function backToCats() { document.getElementById('cat-menu').style.display='block'; document.getElementById('items-view').style.display='none'; }
     tg.expand(); load();
 </script>
