@@ -64,11 +64,11 @@
     <h3 style="text-align:center; color:var(--primary)">YOUR CART</h3>
     <div id="cart-items"></div>
     <div id="checkout-area" style="display:none">
-        <div class="total-row"><span>Total</span><span id="total-price" style="color:var(--primary)">$0</span></div>
-        <select id="pay-select" onchange="togglePay(this.value)"><option value="">Select Method</option></select>
+        <div class="total-row"><span>Total Amount</span><span id="total-price" style="color:var(--primary)">$0</span></div>
+        <select id="pay-select" onchange="togglePay(this.value)"><option value="">Select Payment Method</option></select>
         <div id="pay-info" style="display:none">
             <div class="copy-box" id="pay-address" onclick="copyText(this.innerText)"></div>
-            <p style="text-align:center; font-size:10px; color:#888;">Tap to copy</p>
+            <p style="text-align:center; font-size:10px; color:#888;">Tap to copy address</p>
             <input type="file" id="receipt" accept="image/*" onchange="handleImg(this)">
             <img id="preview" style="width:100%; border-radius:8px; display:none; margin-top:10px; border:1px solid var(--primary)">
         </div>
@@ -94,7 +94,7 @@
         <div id="adm-pay-list" style="margin-top:10px"></div>
     </div>
     <div class="admin-section">
-        <span class="admin-title">Inventory List</span>
+        <span class="admin-title">Inventory Control</span>
         <div id="adm-items-list"></div>
     </div>
 </div>
@@ -107,18 +107,14 @@
 
 <script>
     const tg = window.Telegram.WebApp;
-    // تم تعديل المسار ليكون متوافقاً مع فولدر smabot
-    const API = "https://laquita-unperturbed-altagracia.ngrok-free.dev/smabot"; 
-    
+    // Updated path to smabot
+    const API = "https://laquita-unperturbed-altagracia.ngrok-free.dev/smabot";
     let items = [], payments = [], cart = [], imgBase64 = null;
-    
-    // التأكد من صلاحيات الأدمن (تقدر تضيف الآيدي مالتك هنا)
-    if([5859388511, 6920293690].includes(tg.initDataUnsafe.user?.id)) {
+
+    // Admin ID for Sma Only
+    if([6920293690].includes(tg.initDataUnsafe.user?.id)) {
         document.getElementById("adm-nav").style.display="block";
     }
-
-    // باقي الدوال (sync, renderStore, etc.) تبقى كما هي في الكود الوردي السابق
-</script>
 
     async function sync() {
         try {
@@ -126,7 +122,7 @@
             const d = await r.json(); items = d.items||[]; payments = d.payments||[];
             document.getElementById("stk-count").innerText = items.length;
             renderStore(items); renderAdmin(); renderPayOptions();
-        } catch(e) { console.error(e); }
+        } catch(e) { console.error("Sync Error:", e); }
     }
 
     function renderStore(arr) {
@@ -212,7 +208,7 @@
                 image: imgBase64 
             })
         });
-        tg.showAlert("Success!"); tg.close();
+        tg.showAlert("Order Received!"); tg.close();
     }
 
     function renderAdmin() {
