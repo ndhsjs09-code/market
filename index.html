@@ -6,240 +6,312 @@
     <title>Sma Market</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --primary: #ff2d75; --secondary: #ff85a1; --bg: #0a0a0a; --card-bg: #161616; --border: #252525; }
-        body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; padding: 15px; padding-bottom: 100px; direction: ltr; }
-        .brand-section { text-align: center; margin-bottom: 20px; }
-        .brand-logo { font-size: 26px; font-weight: 800; display: flex; justify-content: center; gap: 8px; }
-        .brand-logo i { color: var(--primary); font-style: normal; }
+        :root { --primary: #ff2d75; --bg: #0a0a0a; --card-bg: #161616; --border: #252525; }
+        body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; padding: 15px; padding-bottom: 80px; }
+        .brand { text-align: center; color: var(--primary); font-size: 24px; font-weight: 800; margin-bottom: 20px; }
+        
+        /* Stats Box */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .stat-box { background: var(--card-bg); border: 1px solid var(--border); padding: 10px; border-radius: 10px; display: flex; justify-content: space-between; }
-        .stat-label { font-size: 10px; color: #888; text-transform: uppercase; }
-        .stat-value { font-weight: bold; color: var(--primary); }
-        .filter-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; margin-bottom: 15px; scrollbar-width: none; }
-        .filter-btn { background: transparent; border: 1px solid var(--border); color: #888; padding: 8px 15px; border-radius: 8px; white-space: nowrap; font-size: 12px; font-weight: bold; cursor: pointer; }
+        .stat-val { color: var(--primary); font-weight: bold; }
+
+        /* Categories */
+        .filter-scroll { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 15px; padding-bottom: 5px; }
+        .filter-btn { background: transparent; border: 1px solid var(--border); color: #888; padding: 8px 15px; border-radius: 8px; white-space: nowrap; cursor: pointer; }
         .filter-btn.active { border-color: var(--primary); color: var(--primary); background: rgba(255, 45, 117, 0.1); }
-        .item-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 10px; position: relative; }
-        .item-user { font-size: 17px; font-weight: bold; display: block; margin-bottom: 5px; }
-        .item-price { color: var(--primary); font-weight: 800; }
-        .badge-gold { background: var(--primary); color: #fff; font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 900; position: absolute; right: 15px; top: 15px; }
-        .btn-add { background: transparent; border: 1px solid var(--primary); color: var(--primary); padding: 5px 12px; border-radius: 6px; font-size: 12px; float: right; cursor: pointer; }
-        .copy-box { background: #000; padding: 15px; border: 1px dashed var(--primary); border-radius: 8px; margin: 10px 0; color: var(--primary); text-align: center; font-family: monospace; word-break: break-all; cursor: pointer; }
-        .total-row { display: flex; justify-content: space-between; padding: 15px 0; border-top: 1px solid var(--border); font-size: 18px; font-weight: bold; }
-        .admin-section { background: #1a1a1a; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #333; }
-        .admin-title { color: var(--primary); font-size: 14px; font-weight: bold; margin-bottom: 10px; display: block; }
-        .del-btn { background: #ff4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; }
+
+        /* Items */
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .price { color: var(--primary); font-weight: bold; font-size: 18px; }
+        .btn-add { background: var(--primary); color: #fff; border: none; padding: 8px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        
+        /* Tabs & Nav */
         .tab { display: none; } .active { display: block; }
-        .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #000; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid var(--border); z-index: 1000; }
-        .nav-item { color: #555; font-weight: bold; font-size: 12px; cursor: pointer; }
-        .nav-item.active-nav { color: var(--primary); }
+        .nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #000; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid var(--border); z-index: 1000; }
+        .nav-item { color: #555; font-weight: bold; cursor: pointer; }
+        .active-nav { color: var(--primary); }
+
+        /* Admin & Forms */
         input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; background: #050505; color: #fff; border: 1px solid #222; border-radius: 6px; box-sizing: border-box; }
-        .btn-main { background: var(--primary); color: #fff; border: none; padding: 14px; width: 100%; border-radius: 6px; font-weight: 900; text-transform: uppercase; cursor: pointer; }
+        .admin-sec { background: #1a1a1a; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #333; }
+        .btn-del { background: #ff4444; color: #fff; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div class="brand-section">
-    <div class="brand-logo"><i>Sma</i><span>Market</span></div>
-</div>
+<div class="brand">Sma Market</div>
 
 <div class="stats-grid">
-    <div class="stat-box"><span class="stat-label">Stock</span><span class="stat-value" id="stk-count">0</span></div>
-    <div class="stat-box"><span class="stat-label">Status</span><span class="stat-value" style="color:var(--secondary)">Active</span></div>
+    <div class="stat-box"><span>STOCK</span><span class="stat-val" id="stk-count">0</span></div>
+    <div class="stat-box"><span>STATUS</span><span class="stat-val" style="color:#2ecc71">Active</span></div>
 </div>
 
 <div id="store-tab" class="tab active">
-    <div class="filter-scroll">
-        <button class="filter-btn active" onclick="filterCat('All', this)">All</button>
-        <button class="filter-btn" onclick="filterCat('3c/L', this)">3c/L</button>
-        <button class="filter-btn" onclick="filterCat('Double/Triple', this)">Double/Triple</button>
-        <button class="filter-btn" onclick="filterCat('4C/L Same', this)">4C/L Same</button>
-        <button class="filter-btn" onclick="filterCat('4LL/CC', this)">4LL/CC</button>
-        <button class="filter-btn" onclick="filterCat('4C/L', this)">4C/L</button>
+    <div class="filter-scroll" id="cat-list">
+        <button class="filter-btn active" onclick="filterItems('All', this)">All</button>
+        <button class="filter-btn" onclick="filterItems('3c/L', this)">3c/L</button>
+        <button class="filter-btn" onclick="filterItems('Double/Triple', this)">Double/Triple</button>
+        <button class="filter-btn" onclick="filterItems('4C/L Same', this)">4C/L Same</button>
+        <button class="filter-btn" onclick="filterItems('4LL/C', this)">4LL/C</button>
     </div>
-    <div id="items-list"></div>
+    <div id="items-container"></div>
 </div>
 
 <div id="cart-tab" class="tab">
-    <h3 style="text-align:center; color:var(--primary)">YOUR CART</h3>
-    <div id="cart-items"></div>
-    <div id="checkout-area" style="display:none">
-        <div class="total-row"><span>Total</span><span id="total-price" style="color:var(--primary)">$0</span></div>
-        <select id="pay-select" onchange="togglePay(this.value)"><option value="">Select Method</option></select>
-        <div id="pay-info" style="display:none">
-            <div class="copy-box" id="pay-address" onclick="copyText(this.innerText)"></div>
-            <p style="text-align:center; font-size:10px; color:#888;">Tap to copy address</p>
-            <input type="file" id="receipt" accept="image/*" onchange="handleImg(this)">
-            <img id="preview" style="width:100%; border-radius:8px; display:none; margin-top:10px; border:1px solid var(--primary)">
+    <div id="cart-content"></div>
+    <div id="checkout-box" style="display:none; margin-top:20px;">
+        <h3 id="cart-total" style="text-align:right; color:var(--primary)"></h3>
+        <select id="pay-method" onchange="togglePayment(this.value)">
+            <option value="">Select Payment</option>
+        </select>
+        <div id="payment-details" style="display:none; background:#000; padding:15px; border-radius:10px; border:1px dashed var(--primary); margin:15px 0; text-align:center;">
+            <p id="wallet-addr" style="color:var(--primary); font-weight:bold; word-break:break-all;" onclick="copyWallet(this.innerText)"></p>
+            <small style="color:#666">Click address to copy</small>
+            <input type="file" id="receipt-img" accept="image/*" onchange="previewImg(this)" style="margin-top:15px">
+            <img id="img-preview" style="width:100%; display:none; margin-top:10px; border-radius:8px; border:1px solid var(--primary)">
         </div>
-        <button class="btn-main" id="order-btn" style="margin-top:15px" onclick="sendOrder()">Place Order</button>
+        <button class="btn-add" style="width:100%; padding:15px;" id="order-submit" onclick="placeOrder()">PLACE ORDER</button>
     </div>
 </div>
 
 <div id="admin-tab" class="tab">
-    <h3 style="text-align:center; color:var(--primary)">ADMIN PANEL</h3>
-    <div class="admin-section">
-        <span class="admin-title">Add Inventory</span>
-        <select id="adm-cat">
-            <option value="3c/L">3c/L</option><option value="Double/Triple">Double/Triple</option>
-            <option value="4C/L Same">4C/L Same</option><option value="4LL/CC">4LL/CC</option><option value="4C/L">4C/L</option>
+    <div class="admin-sec">
+        <label>Add to Category:</label>
+        <select id="adm-cat-select">
+            <option value="All">All</option>
+            <option value="3c/L">3c/L</option>
+            <option value="Double/Triple">Double/Triple</option>
+            <option value="4C/L Same">4C/L Same</option>
+            <option value="4LL/C">4LL/C</option>
         </select>
-        <textarea id="adm-list" rows="4" placeholder="user1:pass1:10"></textarea>
-        <button class="btn-main" onclick="manage('add_users')">SAVE LIST</button>
+        <textarea id="adm-input" rows="5" placeholder="user:pass:price"></textarea>
+        <button class="btn-add" style="width:100%" onclick="adminAction('add_users')">SAVE ACCOUNTS</button>
     </div>
-    <div class="admin-section">
-        <span class="admin-title">Payment Methods</span>
-        <input id="pay-data" placeholder="Name | Wallet">
-        <button class="btn-main" style="background:#2ecc71" onclick="manage('add_pay')">ADD METHOD</button>
-        <div id="adm-pay-list" style="margin-top:10px"></div>
+    
+    <div class="admin-sec">
+        <input id="pay-input" placeholder="Method Name | Address">
+        <button class="btn-add" style="width:100%; background:#2ecc71" onclick="adminAction('add_pay')">ADD PAYMENT</button>
+        <div id="adm-pay-list" style="margin-top:15px"></div>
     </div>
-    <div class="admin-section">
-        <span class="admin-title">Inventory List</span>
-        <div id="adm-items-list"></div>
-    </div>
+    <div id="adm-items-list"></div>
 </div>
 
-<nav class="nav-bar">
+<nav class="nav">
     <div class="nav-item active-nav" onclick="switchTab('store-tab', this)">STORE</div>
-    <div class="nav-item" onclick="switchTab('cart-tab', this)">CART (<span id="cart-count">0</span>)</div>
-    <div id="adm-nav" class="nav-item" style="display:none" onclick="switchTab('admin-tab', this)">ADMIN</div>
+    <div class="nav-item" onclick="switchTab('cart-tab', this)">CART (<span id="cart-badge">0</span>)</div>
+    <div id="admin-nav-btn" class="nav-item" style="display:none" onclick="switchTab('admin-tab', this)">ADMIN</div>
 </nav>
 
 <script>
     const tg = window.Telegram.WebApp;
-    // تم تعديل المسار ليكون متوافقاً مع الفولدر الجديد
-    const API = "https://laquita-unperturbed-altagracia.ngrok-free.dev/smabot";
-    let items = [], payments = [], cart = [], imgBase64 = null;
+    const API = "https://your-ngrok-url.ngrok-free.dev/sma"; // استبدل برابط ngrok الخاص بك
+    let allItems = [], allPayments = [], cart = [], currentImage = null;
 
-    // تم تحديث آيدي الآدمن الجديد هنا
+    // Admin Auth
     if([5939498558].includes(tg.initDataUnsafe.user?.id)) {
-        document.getElementById("adm-nav").style.display="block";
+        document.getElementById("admin-nav-btn").style.display = "block";
     }
 
-    async function sync() {
+    async function loadData() {
         try {
-            const r = await fetch(API + "/get_all", { headers: {"ngrok-skip-browser-warning":"1"} });
-            const d = await r.json(); items = d.items||[]; payments = d.payments||[];
-            document.getElementById("stk-count").innerText = items.length;
-            renderStore(items); renderAdmin(); renderPayOptions();
-        } catch(e) { console.error(e); }
+            const res = await fetch(`${API}/get_all`, { headers: {"ngrok-skip-browser-warning":"true"} });
+            const data = await res.json();
+            allItems = data.items || [];
+            allPayments = data.payments || [];
+            
+            document.getElementById("stk-count").innerText = allItems.length;
+            renderItems(allItems);
+            renderAdminLists();
+            updatePaymentDropdown();
+        } catch (e) { console.error("Load Error:", e); }
     }
 
-    function renderStore(arr) {
-        document.getElementById("items-list").innerHTML = arr.map(i => `<div class="item-card"><span class="badge-gold">PREMIUM</span><span class="item-user">@${i.u}</span><div style="margin-top:10px"><span class="item-price">$${i.p}</span><button class="btn-add" onclick="addToCart('${i.u}','${i.p}')">ADD</button></div></div>`).join("");
-    }
-
-    function filterCat(c, btn) {
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        if(c === 'All') return renderStore(items);
-        renderStore(items.filter(i => i.c === c));
+    function renderItems(arr) {
+        const container = document.getElementById("items-container");
+        if(arr.length === 0) {
+            container.innerHTML = `<p style="text-align:center; color:#555; margin-top:50px;">No items available</p>`;
+            return;
+        }
+        container.innerHTML = arr.map(i => `
+            <div class="card">
+                <div>
+                    <div style="font-weight:bold; font-size:16px;">@${i.u}</div>
+                    <div style="font-size:12px; color:#666;">Category: ${i.c}</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:15px;">
+                    <span class="price">$${i.p}</span>
+                    <button class="btn-add" onclick="addToCart('${i.u}', '${i.p}')">ADD</button>
+                </div>
+            </div>
+        `).join("");
     }
 
     function addToCart(u, p) {
-        if(cart.find(x => x.u === u)) return;
-        cart.push({u, p});
-        document.getElementById("cart-count").innerText = cart.length;
-        updateCartUI();
-        tg.HapticFeedback.impactOccurred('light');
+        if(!cart.find(x => x.u === u)) {
+            cart.push({u, p});
+            updateCartUI();
+            tg.HapticFeedback.impactOccurred('medium');
+        } else {
+            tg.showAlert("Item already in cart");
+        }
     }
 
     function updateCartUI() {
-        const box = document.getElementById("cart-items");
-        if(cart.length === 0) { box.innerHTML = "<p style='text-align:center; color:#555; padding:40px;'>Empty</p>"; document.getElementById("checkout-area").style.display="none"; return; }
-        box.innerHTML = cart.map((i, idx) => `<div class="item-card" style="padding:10px; margin-bottom:5px;"><b>@${i.u}</b> - <span style="color:var(--primary)">$${i.p}</span><button class="del-btn" style="float:right" onclick="cart.splice(${idx},1);updateCartUI();">Del</button></div>`).join("");
-        document.getElementById("total-price").innerText = "$" + cart.reduce((s,i)=>s+parseFloat(i.p),0);
-        document.getElementById("checkout-area").style.display="block";
+        document.getElementById("cart-badge").innerText = cart.length;
+        const container = document.getElementById("cart-content");
+        if(cart.length === 0) {
+            container.innerHTML = `<p style="text-align:center; color:#555; margin-top:50px;">Your cart is empty</p>`;
+            document.getElementById("checkout-box").style.display = "none";
+            return;
+        }
+        
+        container.innerHTML = cart.map((item, index) => `
+            <div class="card">
+                <span>@${item.u}</span>
+                <div>
+                    <span class="price" style="margin-right:10px">$${item.p}</span>
+                    <button class="btn-del" onclick="removeFromCart(${index})">Remove</button>
+                </div>
+            </div>
+        `).join("");
+
+        const total = cart.reduce((sum, i) => sum + parseFloat(i.p), 0);
+        document.getElementById("cart-total").innerText = `Total: $${total.toFixed(2)}`;
+        document.getElementById("checkout-box").style.display = "block";
     }
 
-    function renderPayOptions() {
-        const s = document.getElementById("pay-select");
-        s.innerHTML = '<option value="">Select Method</option>' + payments.map((p, i) => `<option value="${i}">${p.split('|')[0]}</option>`).join("");
+    function removeFromCart(index) {
+        cart.splice(index, 1);
+        updateCartUI();
     }
 
-    function togglePay(val) {
-        const info = document.getElementById("pay-info");
-        if(!val) { info.style.display="none"; return; }
-        info.style.display="block";
-        document.getElementById("pay-address").innerText = payments[val].split('|')[1]?.trim();
+    function updatePaymentDropdown() {
+        const select = document.getElementById("pay-method");
+        select.innerHTML = '<option value="">Select Payment</option>' + 
+            allPayments.map((p, i) => `<option value="${i}">${p.split('|')[0].strip()}</option>`).join("");
     }
 
-    async function handleImg(input) {
+    function togglePayment(index) {
+        const box = document.getElementById("payment-details");
+        if(index !== "") {
+            box.style.display = "block";
+            document.getElementById("wallet-addr").innerText = allPayments[index].split('|')[1].strip();
+        } else {
+            box.style.display = "none";
+        }
+    }
+
+    function previewImg(input) {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
             reader.onload = e => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement("canvas");
-                    const MAX_SIZE = 1200;
-                    let w = img.width, h = img.height;
-                    if (w > MAX_SIZE || h > MAX_SIZE) {
-                        if (w > h) { h *= MAX_SIZE / w; w = MAX_SIZE; }
-                        else { w *= MAX_SIZE / h; h = MAX_SIZE; }
-                    }
-                    canvas.width = w; canvas.height = h;
-                    const ctx = canvas.getContext("2d");
-                    ctx.drawImage(img, 0, 0, w, h);
-                    imgBase64 = canvas.toDataURL("image/jpeg", 0.8);
-                    document.getElementById("preview").src = imgBase64;
-                    document.getElementById("preview").style.display = "block";
-                };
-                img.src = e.target.result;
+                currentImage = e.target.result;
+                const prev = document.getElementById("img-preview");
+                prev.src = currentImage;
+                prev.style.display = "block";
             };
             reader.readAsDataURL(input.files[0]);
         }
     }
 
-    async function sendOrder() {
-        const paySel = document.getElementById("pay-select");
-        if(!paySel.value || !imgBase64) return tg.showAlert("Select method & upload receipt");
-        
-        const btn = document.getElementById("order-btn");
-        btn.innerText = "SENDING..."; btn.disabled = true;
+    async function placeOrder() {
+        const payIndex = document.getElementById("pay-method").value;
+        if(!payIndex || !currentImage) return tg.showAlert("Please select payment and upload receipt image!");
 
-        await fetch(API + "/send_order", {
-            method:"POST", headers:{"Content-Type":"application/json"},
-            body:JSON.stringify({ 
-                user_name: tg.initDataUnsafe.user.username||"User", 
-                user_id: tg.initDataUnsafe.user.id, 
-                items:cart, 
-                total: cart.reduce((s,i)=>s+parseFloat(i.p),0), 
-                method: paySel.options[paySel.selectedIndex].text, 
-                image: imgBase64 
-            })
+        const submitBtn = document.getElementById("order-submit");
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Processing...";
+
+        try {
+            const res = await fetch(`${API}/send_order`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    user_id: tg.initDataUnsafe.user.id,
+                    user_name: tg.initDataUnsafe.user.username || tg.initDataUnsafe.user.first_name,
+                    items: cart,
+                    total: document.getElementById("cart-total").innerText.replace("Total: ", ""),
+                    method: document.getElementById("pay-method").options[document.getElementById("pay-method").selectedIndex].text,
+                    image: currentImage
+                })
+            });
+            if(res.ok) {
+                tg.showAlert("Order sent successfully! Wait for admin approval.");
+                tg.close();
+            }
+        } catch (e) { 
+            tg.showAlert("Order failed. Try again.");
+            submitBtn.disabled = false;
+            submitBtn.innerText = "PLACE ORDER";
+        }
+    }
+
+    function filterItems(cat, btn) {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        if(cat === 'All') renderItems(allItems);
+        else renderItems(allItems.filter(i => i.c === cat));
+    }
+
+    async function adminAction(action, val) {
+        let content = "";
+        let cat = document.getElementById("adm-cat-select").value;
+
+        if(action === 'add_users') content = document.getElementById("adm-input").value;
+        else if(action === 'add_pay') content = document.getElementById("pay-input").value;
+        else content = val;
+
+        const res = await fetch(`${API}/admin/manage`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ action, content, cat, user_id: tg.initDataUnsafe.user.id })
         });
-        tg.showAlert("Success!"); tg.close();
+        
+        if(res.ok) {
+            if(action === 'add_users') document.getElementById("adm-input").value = "";
+            if(action === 'add_pay') document.getElementById("pay-input").value = "";
+            loadData();
+            tg.showAlert("Action Successful");
+        }
     }
 
-    function renderAdmin() {
-        document.getElementById("adm-pay-list").innerHTML = payments.map(p => {
-            const n = p.split('|')[0].trim();
-            return `<div style="display:flex; justify-content:space-between; margin-bottom:5px; background:#000; padding:8px; border-radius:5px;"><small>${n}</small><button class="del-btn" onclick="manage('del_pay','${n}')">X</button></div>`;
-        }).join("");
-        document.getElementById("adm-items-list").innerHTML = items.map(i => `<div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:12px;"><span>@${i.u}</span><button class="del-btn" onclick="manage('del_user','${i.u}')">Del</button></div>`).join("");
+    function renderAdminLists() {
+        document.getElementById("adm-pay-list").innerHTML = allPayments.map(p => `
+            <div style="display:flex; justify-content:space-between; margin-bottom:5px; background:#222; padding:8px; border-radius:5px;">
+                <span>${p.split('|')[0]}</span>
+                <button class="btn-del" onclick="adminAction('del_pay', '${p.split('|')[0]}')">X</button>
+            </div>
+        `).join("");
+
+        document.getElementById("adm-items-list").innerHTML = `<h4 style="margin-top:20px">Current Inventory:</h4>` + allItems.map(i => `
+            <div style="display:flex; justify-content:space-between; margin-bottom:5px; background:#222; padding:8px; border-radius:5px; font-size:12px;">
+                <span>@${i.u} (${i.c})</span>
+                <button class="btn-del" onclick="adminAction('del_user', '${i.u}')">Del</button>
+            </div>
+        `).join("");
     }
 
-    async function manage(action, val) {
-        let content = (action === 'add_users') ? document.getElementById("adm-list").value : (val || document.getElementById("pay-data").value);
-        await fetch(API + "/admin/manage", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ user_id:tg.initDataUnsafe.user.id, action, content, cat: document.getElementById("adm-cat").value }) });
-        if(action === 'add_users') document.getElementById("adm-list").value = "";
-        if(action === 'add_pay') document.getElementById("pay-data").value = "";
-        sync();
+    function switchTab(tabId, el) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active-nav'));
+        el.classList.add('active-nav');
     }
 
-    function switchTab(id, el) {
-        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-        document.getElementById(id).classList.add("active");
-        document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active-nav"));
-        el.classList.add("active-nav");
+    function copyWallet(txt) {
+        const el = document.createElement('textarea');
+        el.value = txt;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        tg.showAlert("Address Copied!");
     }
 
-    function copyText(t) {
-        const el = document.createElement("textarea"); el.value = t; document.body.appendChild(el);
-        el.select(); document.execCommand("copy"); document.body.removeChild(el);
-        tg.showAlert("COPIED!");
-    }
+    String.prototype.strip = function() { return this.replace(/^\s+|\s+$/g, ''); };
 
-    tg.expand(); sync();
+    tg.expand();
+    loadData();
 </script>
 </body>
 </html>
