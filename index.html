@@ -104,7 +104,7 @@
 
 <script>
     const tg = window.Telegram.WebApp;
-    const API = "https://your-ngrok-url.ngrok-free.dev/sma"; // استبدل برابط ngrok الخاص بك
+    const API = "https://laquita-unperturbed-altagracia.ngrok-free.dev/sma"; // استبدل برابط ngrok الخاص بك
     let allItems = [], allPayments = [], cart = [], currentImage = null;
 
     // Admin Auth
@@ -112,19 +112,27 @@
         document.getElementById("admin-nav-btn").style.display = "block";
     }
 
-    async function loadData() {
-        try {
-            const res = await fetch(`${API}/get_all`, { headers: {"ngrok-skip-browser-warning":"true"} });
-            const data = await res.json();
-            allItems = data.items || [];
-            allPayments = data.payments || [];
-            
-            document.getElementById("stk-count").innerText = allItems.length;
-            renderItems(allItems);
-            renderAdminLists();
-            updatePaymentDropdown();
-        } catch (e) { console.error("Load Error:", e); }
+ async function loadData() {
+    try {
+        // تأكد من إضافة /sma في نهاية الرابط
+        const res = await fetch("https://your-ngrok-url.ngrok-free.dev/sma/get_all", { 
+            headers: {"ngrok-skip-browser-warning":"true"} 
+        });
+        const data = await res.json();
+        
+        // طباعة البيانات في الـ Console للتأكد
+        console.log("SMA Data:", data);
+        
+        allItems = data.items || [];
+        allPayments = data.payments || [];
+        document.getElementById("stk-count").innerText = allItems.length;
+        renderItems(allItems);
+    } catch (e) { 
+        console.error("SMA Error:", e);
+        alert("تأكد من رابط الـ API في ملف HTML");
     }
+}
+
 
     function renderItems(arr) {
         const container = document.getElementById("items-container");
