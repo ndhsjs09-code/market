@@ -187,33 +187,46 @@
         }
     }
 
-   async function sendOrder() {
+  async function sendOrder() {
     const pIdx = document.getElementById("pay-select").value;
-    // التأكد من وجود البيانات قبل الإرسال
-    if (!pIdx || !imgBase64) return tg.showAlert("Please select method and upload receipt");
+    if (!pIdx || !imgBase64) {
+        tg.showAlert("Please select method and upload receipt");
+        return;
+    }
     
     const btn = document.getElementById("order-btn");
     btn.innerText = "SENDING..."; 
     btn.disabled = true;
 
-    // نقوم بجمع بيانات الطلب هنا
-    const orderData = {
-        user_name: tg.initDataUnsafe.user.username || "User",
-        user_id: tg.initDataUnsafe.user.id || "0", // أضفنا الـ ID
-        items: cart,
-        total: document.getElementById("total-price").innerText.replace('$', ''), // تأكد من الـ ID هنا
-        method: document.getElementById("pay-select").options[document.getElementById("pay-select").selectedIndex].text,
-        image: imgBase64
-    };
+    try {
+        const orderData = {
+            user_name: tg.initDataUnsafe.user.username || "User",
+            user_id: tg.initDataUnsafe.user.id || 0,
+            items: cart,
+            total: document.getElementById("total-price").innerText.replace('$', ''),
+            method: document.getElementById("pay-select").options[document.getElementById("pay-select").selectedIndex].text,
+            image: imgBase64
+        };
 
-    await fetch(API + "/send_order", {
-        method: "POST", 
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(orderData)
-    });
-    
-    tg.showAlert("Order Received!"); 
-    tg.close();
+        const response = await fetch(API + "/send_order", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(orderData)
+        });
+
+        if (response.ok) {
+            tg.showAlert("Order Received!");
+            tg.close();
+        } else {
+            tg.showAlert("Error: Server responded with an error");
+            btn.innerText = "SEND"; // إعادة الزر لحالته
+            btn.disabled = false;
+        }
+    } catch (error) {
+        tg.showAlert("Connection failed: " + error.message);
+        btn.innerText = "SEND"; 
+        btn.disabled = false;
+    }
 }
 
     function renderAdmin() {
