@@ -2,66 +2,30 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sma Market</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --primary: #ff2d75; --bg: #0a0a0a; --card-bg: #161616; --border: #252525; }
-        body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; padding: 15px; padding-bottom: 80px; }
-        .brand { text-align: center; color: var(--primary); font-size: 24px; font-weight: 800; margin-bottom: 20px; }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .stat-box { background: var(--card-bg); border: 1px solid var(--border); padding: 10px; border-radius: 10px; display: flex; justify-content: space-between; }
-        .stat-val { color: var(--primary); font-weight: bold; }
-        .filter-scroll { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 15px; padding-bottom: 5px; }
-        .filter-btn { background: transparent; border: 1px solid var(--border); color: #888; padding: 8px 15px; border-radius: 8px; cursor: pointer; }
-        .filter-btn.active { border-color: var(--primary); color: var(--primary); background: rgba(255, 45, 117, 0.1); }
-        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .price { color: var(--primary); font-weight: bold; }
+        :root { --primary: #ff2d75; --bg: #0a0a0a; --card-bg: #161616; }
+        body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; padding: 15px; }
+        .card { background: var(--card-bg); border: 1px solid #222; border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
         .btn-add { background: var(--primary); color: #fff; border: none; padding: 8px 18px; border-radius: 6px; cursor: pointer; }
         .btn-del { background: #ff4444; color: #fff; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
         .tab { display: none; } .active { display: block; }
-        .nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #000; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid var(--border); z-index: 1000; }
-        .nav-item { color: #555; font-weight: bold; cursor: pointer; }
+        .nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #000; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #222; }
         .active-nav { color: var(--primary); }
-        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; background: #050505; color: #fff; border: 1px solid #222; border-radius: 6px; }
     </style>
 </head>
 <body>
 
-<div class="brand">Sma Market</div>
-<div class="stats-grid">
-    <div class="stat-box"><span>STOCK</span><span class="stat-val" id="stk-count">0</span></div>
-    <div class="stat-box"><span>STATUS</span><span class="stat-val" style="color:#2ecc71">Active</span></div>
-</div>
-
 <div id="store-tab" class="tab active">
-    <div class="filter-scroll">
-        <button class="filter-btn active" onclick="filterItems('All', this)">All</button>
-        <button class="filter-btn" onclick="filterItems('3c/L', this)">3c/L</button>
-        <button class="filter-btn" onclick="filterItems('Double/Triple', this)">Double/Triple</button>
-        <button class="filter-btn" onclick="filterItems('4C/L', this)">4C/L</button>
-        <button class="filter-btn" onclick="filterItems('4LL/CC', this)">4LL/CC</button>
-    </div>
+    <h2 style="color:var(--primary); text-align:center;">Store</h2>
     <div id="items-container"></div>
 </div>
 
 <div id="admin-tab" class="tab">
-    <div style="background:#1a1a1a; padding:15px; border-radius:10px;">
-        <select id="adm-cat-select">
-            <option value="All">All</option>
-            <option value="3c/L">3c/L</option>
-            <option value="Double/Triple">Double/Triple</option>
-            <option value="4C/L">4C/L</option>
-            <option value="4LL/CC">4LL/CC</option>
-        </select>
-        <textarea id="adm-input" rows="3" placeholder="user:pass:price"></textarea>
-        <button class="btn-add" style="width:100%" onclick="adminAction('add_users')">SAVE ACCOUNTS</button>
-        <hr style="border:0; border-top:1px solid #333; margin:20px 0;">
-        <input id="pay-input" placeholder="Method Name | Address">
-        <button class="btn-add" style="width:100%; background:#2ecc71" onclick="adminAction('add_pay')">ADD PAYMENT</button>
-        <div id="adm-pay-list" style="margin-top:10px"></div>
-        <div id="adm-items-list" style="margin-top:20px"></div>
-    </div>
+    <h2 style="color:var(--primary); text-align:center;">Admin Panel</h2>
+    <div id="adm-items-list"></div>
 </div>
 
 <nav class="nav">
@@ -72,57 +36,44 @@
 <script>
     const tg = window.Telegram.WebApp;
     const API = "https://laquita-unperturbed-altagracia.ngrok-free.dev/sma";
-    let allItems = [], allPayments = [];
+    let allItems = [];
 
+    // إظهار تبويب الأدمن فقط للمسؤولين
     if([5939498558].includes(tg.initDataUnsafe.user?.id)) document.getElementById("admin-nav-btn").style.display = "block";
 
     async function loadData() {
-        const res = await fetch(`${API}/get_all`, { headers: {"ngrok-skip-browser-warning":"true"} });
+        const res = await fetch(`${API}/get_all`);
         const data = await res.json();
         allItems = data.items || [];
-        allPayments = data.payments || [];
-        document.getElementById("stk-count").innerText = allItems.length;
-        renderUI();
+        renderStore();
+        renderAdmin();
     }
 
-    function renderUI() {
-        // عرض المتجر
+    // عرض المتجر مع زر ADD
+    function renderStore() {
         document.getElementById("items-container").innerHTML = allItems.map(i => `
             <div class="card">
-                <div><strong>@${i.u}</strong><br><small>${i.c}</small></div>
-                <span class="price">$${i.p}</span>
+                <div><strong>@${i.u}</strong><br><small style="color:#666">${i.c}</small></div>
+                <button class="btn-add" onclick="tg.showAlert('تمت الإضافة: ${i.u}')">ADD</button>
             </div>`).join("");
-        
-        // عرض قائمة الأدمن
-        document.getElementById("adm-pay-list").innerHTML = allPayments.map(p => `
-            <div style="display:flex; justify-content:space-between; margin:5px 0; background:#222; padding:8px;">
-                <span>${p.split('|')[0]}</span>
-                <button class="btn-del" onclick="adminAction('del_pay', '${p.split('|')[0]}')">X</button>
-            </div>`).join("");
+    }
 
+    // عرض الأدمن مع زر حذف
+    function renderAdmin() {
         document.getElementById("adm-items-list").innerHTML = allItems.map(i => `
-            <div style="display:flex; justify-content:space-between; margin:5px 0; background:#222; padding:8px;">
+            <div class="card">
                 <span>@${i.u}</span>
                 <button class="btn-del" onclick="adminAction('del_user', '${i.u}')">Del</button>
             </div>`).join("");
     }
 
     async function adminAction(action, val) {
-        let content = action === 'add_users' ? document.getElementById("adm-input").value : 
-                      action === 'add_pay' ? document.getElementById("pay-input").value : val;
-        
         await fetch(`${API}/admin/manage`, {
             method: "POST",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({ action, content, cat: document.getElementById("adm-cat-select").value })
+            body: JSON.stringify({ action, content: val })
         });
         loadData();
-    }
-
-    function filterItems(cat, btn) {
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        renderUI(cat === 'All' ? allItems : allItems.filter(i => i.c === cat));
     }
 
     function switchTab(t, el) {
