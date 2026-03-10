@@ -2,89 +2,229 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sma Market</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>#SMA MARKET</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --primary: #ff2d75; --bg: #0a0a0a; --card-bg: #161616; }
-        body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; padding: 15px; }
-        .card { background: var(--card-bg); border: 1px solid #222; border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .btn-add { background: var(--primary); color: #fff; border: none; padding: 8px 18px; border-radius: 6px; cursor: pointer; }
-        .btn-del { background: #ff4444; color: #fff; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+        :root { --primary: #ff2d75; --secondary: #ff0050; --gold: #ffbd39; --bg: #0a0a0a; --card-bg: #121212; --border: #2a1018; }
+        body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; padding: 15px; padding-bottom: 100px; direction: ltr; }
+        .brand-section { text-align: center; margin-bottom: 20px; }
+        .brand-logo { font-size: 26px; font-weight: 800; display: flex; justify-content: center; gap: 8px; }
+        .brand-logo i { color: var(--primary); font-style: normal; }
+        .brand-logo span { color: #fff; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .stat-box { background: var(--card-bg); border: 1px solid var(--border); padding: 10px; border-radius: 10px; display: flex; justify-content: space-between; }
+        .stat-label { font-size: 10px; color: #888; text-transform: uppercase; }
+        .stat-value { font-weight: bold; color: var(--primary); }
+        .filter-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; margin-bottom: 15px; scrollbar-width: none; }
+        .filter-btn { background: transparent; border: 1px solid var(--border); color: #888; padding: 8px 15px; border-radius: 8px; white-space: nowrap; font-size: 12px; font-weight: bold; cursor: pointer; }
+        .filter-btn.active { border-color: var(--primary); color: var(--primary); background: rgba(255, 45, 117, 0.1); }
+        .item-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 10px; position: relative; }
+        .item-user { font-size: 17px; font-weight: bold; display: block; margin-bottom: 5px; }
+        .item-price { color: var(--primary); font-weight: 800; }
+        .badge-gold { background: var(--primary); color: #fff; font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 900; position: absolute; right: 15px; top: 15px; }
+        .btn-add { background: transparent; border: 1px solid var(--primary); color: var(--primary); padding: 5px 12px; border-radius: 6px; font-size: 12px; float: right; cursor: pointer; }
+        .copy-box { background: #000; padding: 15px; border: 1px dashed var(--primary); border-radius: 8px; margin: 10px 0; color: var(--primary); text-align: center; font-family: monospace; word-break: break-all; cursor: pointer; }
+        .total-row { display: flex; justify-content: space-between; padding: 15px 0; border-top: 1px solid var(--border); font-size: 18px; font-weight: bold; }
+        .admin-section { background: #1a0a10; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #4a1525; }
+        .admin-title { color: var(--primary); font-size: 14px; font-weight: bold; margin-bottom: 10px; display: block; }
+        .del-btn { background: #ff2d75; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; }
         .tab { display: none; } .active { display: block; }
-        .nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #000; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #222; }
-        .active-nav { color: var(--primary); }
+        .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #000; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid var(--border); z-index: 1000; }
+        .nav-item { color: #555; font-weight: bold; font-size: 12px; cursor: pointer; }
+        .nav-item.active-nav { color: var(--primary); }
+        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; background: #050505; color: #fff; border: 1px solid #222; border-radius: 6px; box-sizing: border-box; }
+        .btn-main { background: var(--primary); color: #fff; border: none; padding: 14px; width: 100%; border-radius: 6px; font-weight: 900; text-transform: uppercase; cursor: pointer; }
     </style>
 </head>
 <body>
 
+<div class="brand-section">
+    <div class="brand-logo"><i>#SMA</i><span>Market</span></div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-box"><span class="stat-label">Stock</span><span class="stat-value" id="stk-count">0</span></div>
+    <div class="stat-box"><span class="stat-label">Status</span><span class="stat-value" style="color:var(--primary)">Active</span></div>
+</div>
+
 <div id="store-tab" class="tab active">
-    <h2 style="color:var(--primary); text-align:center;">Store</h2>
-    <div id="items-container"></div>
+    <div class="filter-scroll">
+        <button class="filter-btn active" onclick="filterCat('All', this)">All</button>
+        <button class="filter-btn" onclick="filterCat('3c/L', this)">3c/L</button>
+        <button class="filter-btn" onclick="filterCat('Double/Triple', this)">Double/Triple</button>
+        <button class="filter-btn" onclick="filterCat('4C/L', this)">4C/L</button>
+        <button class="filter-btn" onclick="filterCat('4LL/CC', this)">4LL/CC</button>
+    </div>
+    <div id="items-list"></div>
+</div>
+
+<div id="cart-tab" class="tab">
+    <h3 style="text-align:center; color:var(--primary)">YOUR CART</h3>
+    <div id="cart-items"></div>
+    <div id="checkout-area" style="display:none">
+        <div class="total-row"><span>Total</span><span id="total-price" style="color:var(--primary)">$0</span></div>
+        <select id="pay-select" onchange="togglePay(this.value)"><option value="">Select Payment</option></select>
+        <div id="pay-info" style="display:none">
+            <div class="copy-box" id="pay-address" onclick="copyText(this.innerText)"></div>
+            <p style="text-align:center; font-size:10px; color:#888;">Tap to copy</p>
+            <input type="file" id="receipt" accept="image/*" onchange="handleImg(this)">
+            <img id="preview" style="width:100%; border-radius:8px; display:none; margin-top:10px; border:1px solid var(--primary)">
+        </div>
+        <button class="btn-main" id="order-btn" style="margin-top:15px" onclick="sendOrder()">Place Order</button>
+    </div>
 </div>
 
 <div id="admin-tab" class="tab">
-    <h2 style="color:var(--primary); text-align:center;">Admin Panel</h2>
-    <div id="adm-items-list"></div>
+    <h3 style="text-align:center; color:var(--primary)">ADMIN PANEL</h3>
+    <div class="admin-section">
+        <span class="admin-title">Add List</span>
+        <select id="adm-cat">
+            <option value="3c/L">3c/L</option><option value="Double/Triple">Double/Triple</option>
+            <option value="4C/L">4C/L</option><option value="4LL/CC">4LL/CC</option>
+        </select>
+        <textarea id="adm-list" rows="4" placeholder="user:pass:price"></textarea>
+        <button class="btn-main" onclick="manage('add_users')">SAVE</button>
+    </div>
+    <div class="admin-section">
+        <span class="admin-title">Payment Methods</span>
+        <input id="pay-data" placeholder="Name | Wallet">
+        <button class="btn-main" style="background:#2ecc71" onclick="manage('add_pay')">ADD</button>
+        <div id="adm-pay-list" style="margin-top:10px"></div>
+    </div>
+    <div class="admin-section">
+        <span class="admin-title">Inventory</span>
+        <div id="adm-items-list"></div>
+    </div>
 </div>
 
-<nav class="nav">
+<nav class="nav-bar">
     <div class="nav-item active-nav" onclick="switchTab('store-tab', this)">STORE</div>
-    <div id="admin-nav-btn" class="nav-item" style="display:none" onclick="switchTab('admin-tab', this)">ADMIN</div>
+    <div class="nav-item" onclick="switchTab('cart-tab', this)">CART (<span id="cart-count">0</span>)</div>
+    <div id="adm-nav" class="nav-item" style="display:none" onclick="switchTab('admin-tab', this)">ADMIN</div>
 </nav>
 
 <script>
     const tg = window.Telegram.WebApp;
+    // استبدل هذا الرابط برابط الـ sma الخاص بك
     const API = "https://laquita-unperturbed-altagracia.ngrok-free.dev/sma";
-    let allItems = [];
+    let items = [], payments = [], cart = [], imgBase64 = null;
+    
+    // يرجى تغيير معرف الأدمن الخاص بك هنا
+    if([5939498558].includes(tg.initDataUnsafe.user?.id)) document.getElementById("adm-nav").style.display="block";
 
-    // إظهار تبويب الأدمن فقط للمسؤولين
-    if([5939498558].includes(tg.initDataUnsafe.user?.id)) document.getElementById("admin-nav-btn").style.display = "block";
-
-    async function loadData() {
-        const res = await fetch(`${API}/get_all`);
-        const data = await res.json();
-        allItems = data.items || [];
-        renderStore();
-        renderAdmin();
+    async function sync() {
+        const r = await fetch(API + "/get_all", { headers: {"ngrok-skip-browser-warning":"1"} });
+        const d = await r.json(); items = d.items||[]; payments = d.payments||[];
+        document.getElementById("stk-count").innerText = items.length;
+        renderStore(items); renderAdmin(); renderPayOptions();
     }
 
-    // عرض المتجر مع زر ADD
-    function renderStore() {
-        document.getElementById("items-container").innerHTML = allItems.map(i => `
-            <div class="card">
-                <div><strong>@${i.u}</strong><br><small style="color:#666">${i.c}</small></div>
-                <button class="btn-add" onclick="tg.showAlert('تمت الإضافة: ${i.u}')">ADD</button>
-            </div>`).join("");
+    function renderStore(arr) {
+        document.getElementById("items-list").innerHTML = arr.map(i => `<div class="item-card"><span class="badge-gold">NEW</span><span class="item-user">@${i.u}</span><div style="margin-top:10px"><span class="item-price">$${i.p}</span><button class="btn-add" onclick="addToCart('${i.u}','${i.p}')">ADD</button></div></div>`).join("");
     }
 
-    // عرض الأدمن مع زر حذف
-    function renderAdmin() {
-        document.getElementById("adm-items-list").innerHTML = allItems.map(i => `
-            <div class="card">
-                <span>@${i.u}</span>
-                <button class="btn-del" onclick="adminAction('del_user', '${i.u}')">Del</button>
-            </div>`).join("");
+    function filterCat(c, btn) {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        if(c === 'All') return renderStore(items);
+        renderStore(items.filter(i => i.c === c));
     }
 
-    async function adminAction(action, val) {
-        await fetch(`${API}/admin/manage`, {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({ action, content: val })
+    function addToCart(u, p) {
+        if(cart.find(x => x.u === u)) return;
+        cart.push({u, p});
+        document.getElementById("cart-count").innerText = cart.length;
+        updateCartUI();
+        tg.HapticFeedback.impactOccurred('light');
+    }
+
+    function updateCartUI() {
+        const box = document.getElementById("cart-items");
+        if(cart.length === 0) { box.innerHTML = "<p style='text-align:center; color:#555; padding:40px;'>Empty</p>"; document.getElementById("checkout-area").style.display="none"; return; }
+        box.innerHTML = cart.map((i, idx) => `<div class="item-card" style="padding:10px; margin-bottom:5px;"><b>@${i.u}</b> - <span style="color:var(--primary)">$${i.p}</span><button class="del-btn" style="float:right" onclick="cart.splice(${idx},1);updateCartUI();">Del</button></div>`).join("");
+        document.getElementById("total-price").innerText = "$" + cart.reduce((s,i)=>s+parseFloat(i.p),0);
+        document.getElementById("checkout-area").style.display="block";
+    }
+
+    function renderPayOptions() {
+        const s = document.getElementById("pay-select");
+        s.innerHTML = '<option value="">Select Method</option>' + payments.map((p, i) => `<option value="${i}">${p.split('|')[0]}</option>`).join("");
+    }
+
+    function togglePay(val) {
+        const info = document.getElementById("pay-info");
+        if(!val) { info.style.display="none"; return; }
+        info.style.display="block";
+        document.getElementById("pay-address").innerText = payments[val].split('|')[1]?.trim();
+    }
+
+    async function handleImg(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement("canvas");
+                    const MAX_SIZE = 1000;
+                    let w = img.width, h = img.height;
+                    if (w > MAX_SIZE || h > MAX_SIZE) {
+                        if (w > h) { h *= MAX_SIZE / w; w = MAX_SIZE; }
+                        else { w *= MAX_SIZE / h; h = MAX_SIZE; }
+                    }
+                    canvas.width = w; canvas.height = h;
+                    const ctx = canvas.getContext("2d");
+                    ctx.drawImage(img, 0, 0, w, h);
+                    imgBase64 = canvas.toDataURL("image/jpeg", 0.8);
+                    document.getElementById("preview").src = imgBase64;
+                    document.getElementById("preview").style.display = "block";
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    async function sendOrder() {
+        const pIdx = document.getElementById("pay-select").value;
+        if (!pIdx || !imgBase64) return tg.showAlert("Please select method and upload receipt");
+        const btn = document.getElementById("order-btn");
+        btn.innerText = "SENDING..."; btn.disabled = true;
+        await fetch(API + "/send_order", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user_name: tg.initDataUnsafe.user.username, items: cart, method: document.getElementById("pay-select").options[document.getElementById("pay-select").selectedIndex].text, image: imgBase64 })
         });
-        loadData();
+        tg.showAlert("Order Received!"); tg.close();
     }
 
-    function switchTab(t, el) {
-        document.querySelectorAll('.tab').forEach(x => x.style.display = 'none');
-        document.getElementById(t).style.display = 'block';
-        document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active-nav'));
-        el.classList.add('active-nav');
+    function renderAdmin() {
+        document.getElementById("adm-pay-list").innerHTML = payments.map(p => {
+            const n = p.split('|')[0].trim();
+            return `<div style="display:flex; justify-content:space-between; margin-bottom:5px; background:#000; padding:8px; border-radius:5px;"><small>${n}</small><button class="del-btn" onclick="manage('del_pay','${n}')">X</button></div>`;
+        }).join("");
+        document.getElementById("adm-items-list").innerHTML = items.map(i => `<div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:12px;"><span>@${i.u}</span><button class="del-btn" onclick="manage('del_user','${i.u}')">Delete</button></div>`).join("");
     }
 
-    tg.expand();
-    loadData();
+    async function manage(action, val) {
+        let content = (action === 'add_users') ? document.getElementById("adm-list").value : (val || document.getElementById("pay-data").value);
+        await fetch(API + "/admin/manage", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ action, content, cat: document.getElementById("adm-cat").value }) });
+        document.getElementById("adm-list").value = ""; sync();
+    }
+
+    function switchTab(id, el) {
+        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+        document.getElementById(id).classList.add("active");
+        document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active-nav"));
+        el.classList.add("active-nav");
+    }
+
+    function copyText(t) {
+        const el = document.createElement("textarea"); el.value = t; document.body.appendChild(el);
+        el.select(); document.execCommand("copy"); document.body.removeChild(el);
+        tg.showAlert("COPIED!");
+    }
+
+    tg.expand(); sync();
 </script>
 </body>
 </html>
