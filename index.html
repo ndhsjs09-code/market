@@ -47,12 +47,13 @@
 </div>
 
 <div id="store-tab" class="tab active">
-    <div class="filter-scroll" id="cat-list">
-        <button class="filter-btn active" onclick="filterItems('All', this)">All</button>
-        <button class="filter-btn" onclick="filterItems('3c/L', this)">3c/L</button>
-        <button class="filter-btn" onclick="filterItems('Double/Triple', this)">Double/Triple</button>
-        <button class="filter-btn" onclick="filterItems('4C/L Same', this)">4C/L Same</button>
-        <button class="filter-btn" onclick="filterItems('4LL/C', this)">4LL/C</button>
+  <div class="filter-scroll" id="cat-list">
+    <button class="filter-btn active" onclick="filterItems('All', this)">All</button>
+    <button class="filter-btn" onclick="filterItems('3c/L', this)">3c/L</button>
+    <button class="filter-btn" onclick="filterItems('Double/Triple', this)">Double/Triple</button>
+    <button class="filter-btn" onclick="filterItems('4C/L', this)">4C/L</button>
+    <button class="filter-btn" onclick="filterItems('4LL/CC', this)">4LL/CC</button>
+</div>
     </div>
     <div id="items-container"></div>
 </div>
@@ -77,13 +78,14 @@
 <div id="admin-tab" class="tab">
     <div class="admin-sec">
         <label>Add to Category:</label>
-        <select id="adm-cat-select">
-            <option value="All">All</option>
-            <option value="3c/L">3c/L</option>
-            <option value="Double/Triple">Double/Triple</option>
-            <option value="4C/L Same">4C/L Same</option>
-            <option value="4LL/C">4LL/C</option>
-        </select>
+       <select id="adm-cat-select">
+    <option value="All">All</option>
+    <option value="3c/L">3c/L</option>
+    <option value="Double/Triple">Double/Triple</option>
+    <option value="4LL/CC">4LL/CC</option>
+    <option value="4C/L">4C/L</option>
+</select>
+  
         <textarea id="adm-input" rows="5" placeholder="user:pass:price"></textarea>
         <button class="btn-add" style="width:100%" onclick="adminAction('add_users')">SAVE ACCOUNTS</button>
     </div>
