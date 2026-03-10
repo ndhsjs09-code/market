@@ -107,9 +107,18 @@
 
 <script>
     const tg = window.Telegram.WebApp;
-    const API = "https://laquita-unperturbed-altagracia.ngrok-free.dev/mw";
+    // تم تعديل المسار ليكون متوافقاً مع فولدر smabot
+    const API = "https://laquita-unperturbed-altagracia.ngrok-free.dev/smabot"; 
+    
     let items = [], payments = [], cart = [], imgBase64 = null;
-    if([5859388511, 6920293690].includes(tg.initDataUnsafe.user?.id)) document.getElementById("adm-nav").style.display="block";
+    
+    // التأكد من صلاحيات الأدمن (تقدر تضيف الآيدي مالتك هنا)
+    if([5859388511, 6920293690].includes(tg.initDataUnsafe.user?.id)) {
+        document.getElementById("adm-nav").style.display="block";
+    }
+
+    // باقي الدوال (sync, renderStore, etc.) تبقى كما هي في الكود الوردي السابق
+</script>
 
     async function sync() {
         try {
